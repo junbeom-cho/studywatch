@@ -146,3 +146,18 @@ body {
   font-size: 14px;
   text-align: left;
 }
+
+.field--inline {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  align-self: end;
+  padding-bottom: 12px;
+}
+
+.field__check {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}

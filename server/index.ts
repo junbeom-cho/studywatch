@@ -21,6 +21,8 @@ const PORT = Number(process.env.PORT ?? 3000)
 const CLIENT_DIR = 'dist/client'
 const FLUSH_INTERVAL_MS = 30_000
 const MAX_FIELD_LENGTH = 200
+/** 하루보다 긴 목표나 간격은 오타로 본다. */
+const MAX_DURATION_MS = 24 * 60 * 60 * 1000
 const MAX_SCREENSHOT_BYTES = 8 * 1024 * 1024
 
 const app = new Hono()
@@ -32,6 +34,7 @@ app.put('/api/settings', async (c) => {
   if (!body) return c.json({ error: '본문을 읽을 수 없다' }, 400)
 
   const patch: Partial<Settings> = {}
+
   for (const key of ['nickname', 'courseName', 'instructorName'] as const) {
     const value = body[key]
     if (value === undefined) continue
@@ -40,6 +43,27 @@ app.put('/api/settings', async (c) => {
       return c.json({ error: `${key} 는 ${MAX_FIELD_LENGTH}자를 넘을 수 없다` }, 400)
     }
     patch[key] = value
+  }
+
+  // null 은 "알림 꺼짐" 이라는 뜻이므로 유효한 값이다 (PRD 4.5)
+  for (const key of ['goalMs', 'intervalMs'] as const) {
+    const value = body[key]
+    if (value === undefined) continue
+    if (value === null) {
+      patch[key] = null
+      continue
+    }
+    if (!Number.isInteger(value) || value <= 0 || value > MAX_DURATION_MS) {
+      return c.json({ error: `${key} 는 1 이상 ${MAX_DURATION_MS} 이하의 정수여야 한다` }, 400)
+    }
+    patch[key] = value
+  }
+
+  if (body.soundEnabled !== undefined) {
+    if (typeof body.soundEnabled !== 'boolean') {
+      return c.json({ error: 'soundEnabled 는 참/거짓이어야 한다' }, 400)
+    }
+    patch.soundEnabled = body.soundEnabled
   }
 
   writeSettings(patch)

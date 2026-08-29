@@ -19,6 +19,11 @@ export interface Settings {
   nickname: string
   courseName: string
   instructorName: string
+  /** 목표 시간. null 이면 목표 알림이 꺼진 상태다. 기본값을 지어내지 않는다. (PRD 4.5) */
+  goalMs: number | null
+  /** 반복 알림 간격. null 이면 반복 알림이 꺼진 상태다. */
+  intervalMs: number | null
+  soundEnabled: boolean
 }
 
 export interface ScreenshotMeta {

@@ -4,6 +4,7 @@ import { DiscardButton } from './DiscardButton'
 import { SettingsPanel } from './SettingsPanel'
 import { WatchCanvas } from './WatchCanvas'
 import { captureFace } from './screenshot'
+import { useAlarms } from './useAlarms'
 import { useAppState } from './useAppState'
 
 const NOTICE_MS = 6000
@@ -11,6 +12,8 @@ const NOTICE_MS = 6000
 export default function App() {
   const { state, connection, serverNow, run } = useAppState()
   const canvasRef = useRef<HTMLCanvasElement>(null)
+
+  useAlarms(state, serverNow)
   const [notice, setNotice] = useState<string | null>(null)
   const [capturing, setCapturing] = useState(false)
 

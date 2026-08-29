@@ -18,6 +18,9 @@ interface SettingsRow {
   nickname: string
   course_name: string
   instructor_name: string
+  goal_ms: number | null
+  interval_ms: number | null
+  sound_enabled: number
 }
 
 /** 아직 끝나지 않은 세션. 동시에 둘 이상 존재하지 않는다. */
@@ -49,21 +52,32 @@ export function currentSession(): SessionSnapshot | null {
 }
 
 export function readSettings(): Settings {
-  const row = db
-    .prepare('SELECT nickname, course_name, instructor_name FROM settings WHERE id = 1')
-    .get() as SettingsRow
+  const row = db.prepare('SELECT * FROM settings WHERE id = 1').get() as SettingsRow
   return {
     nickname: row.nickname,
     courseName: row.course_name,
     instructorName: row.instructor_name,
+    goalMs: row.goal_ms,
+    intervalMs: row.interval_ms,
+    soundEnabled: row.sound_enabled === 1,
   }
 }
 
 export function writeSettings(patch: Partial<Settings>): Settings {
   const next = { ...readSettings(), ...patch }
   db.prepare(
-    'UPDATE settings SET nickname = ?, course_name = ?, instructor_name = ? WHERE id = 1',
-  ).run(next.nickname.trim(), next.courseName.trim(), next.instructorName.trim())
+    `UPDATE settings
+       SET nickname = ?, course_name = ?, instructor_name = ?,
+           goal_ms = ?, interval_ms = ?, sound_enabled = ?
+     WHERE id = 1`,
+  ).run(
+    next.nickname.trim(),
+    next.courseName.trim(),
+    next.instructorName.trim(),
+    next.goalMs,
+    next.intervalMs,
+    next.soundEnabled ? 1 : 0,
+  )
   return readSettings()
 }
 
