@@ -16,6 +16,15 @@ import {
   stopSession,
   writeSettings,
 } from './store'
+import {
+  ALLOWED_MIME,
+  BACKGROUND_LIMIT,
+  backgroundFile,
+  countBackgrounds,
+  listBackgrounds,
+  removeBackground,
+  saveBackground,
+} from './backgrounds'
 import { listScreenshots, saveScreenshot, screenshotFile } from './screenshots'
 import type { Settings } from '../shared/types'
 
@@ -26,6 +35,7 @@ const MAX_FIELD_LENGTH = 200
 /** 하루보다 긴 목표나 간격은 오타로 본다. */
 const MAX_DURATION_MS = 24 * 60 * 60 * 1000
 const MAX_SCREENSHOT_BYTES = 8 * 1024 * 1024
+const MAX_BACKGROUND_BYTES = 8 * 1024 * 1024
 const CALENDAR_DAYS = 182
 const MAX_CALENDAR_DAYS = 366
 
@@ -63,6 +73,17 @@ app.put('/api/settings', async (c) => {
     patch[key] = value
   }
 
+  if (body.backgroundId !== undefined) {
+    const value = body.backgroundId
+    if (value !== null && (!Number.isInteger(value) || value <= 0)) {
+      return c.json({ error: 'backgroundId 는 양의 정수이거나 null 이어야 한다' }, 400)
+    }
+    if (value !== null && !backgroundFile(value)) {
+      return c.json({ error: '없는 배경이다' }, 404)
+    }
+    patch.backgroundId = value
+  }
+
   if (body.soundEnabled !== undefined) {
     if (typeof body.soundEnabled !== 'boolean') {
       return c.json({ error: 'soundEnabled 는 참/거짓이어야 한다' }, 400)
@@ -91,6 +112,39 @@ app.post('/api/session/:action', (c) => {
   const now = Date.now()
   run(now)
   return c.json(snapshot(now))
+})
+
+app.post('/api/backgrounds', async (c) => {
+  const mime = (c.req.header('content-type') ?? '').split(';')[0]?.trim() ?? ''
+  if (!(mime in ALLOWED_MIME)) {
+    return c.json({ error: `PNG · JPEG · WebP 만 받는다 (${mime || '형식 없음'})` }, 415)
+  }
+  if (countBackgrounds() >= BACKGROUND_LIMIT) {
+    return c.json({ error: `배경은 ${BACKGROUND_LIMIT}장까지다. 쓰지 않는 것을 지운다.` }, 409)
+  }
+
+  const body = await c.req.arrayBuffer()
+  if (body.byteLength === 0) return c.json({ error: '빈 파일이다' }, 400)
+  if (body.byteLength > MAX_BACKGROUND_BYTES) return c.json({ error: '파일이 너무 크다' }, 413)
+
+  return c.json(saveBackground(new Uint8Array(body), mime, Date.now()), 201)
+})
+
+app.get('/api/backgrounds', (c) => c.json(listBackgrounds()))
+
+app.get('/api/backgrounds/:id', (c) => {
+  const id = Number(c.req.param('id'))
+  const found = Number.isInteger(id) ? backgroundFile(id) : null
+  if (!found) return c.json({ error: '없는 배경이다' }, 404)
+  return new Response(readFileSync(found.path), { headers: { 'content-type': found.mime } })
+})
+
+app.delete('/api/backgrounds/:id', (c) => {
+  const id = Number(c.req.param('id'))
+  if (!Number.isInteger(id) || !removeBackground(id)) {
+    return c.json({ error: '없는 배경이다' }, 404)
+  }
+  return c.json(snapshot(Date.now()))
 })
 
 app.get('/api/calendar', (c) => {

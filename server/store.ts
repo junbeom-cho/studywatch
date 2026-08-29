@@ -21,6 +21,7 @@ interface SettingsRow {
   goal_ms: number | null
   interval_ms: number | null
   sound_enabled: number
+  background_id: number | null
 }
 
 /** 아직 끝나지 않은 세션. 동시에 둘 이상 존재하지 않는다. */
@@ -60,6 +61,7 @@ export function readSettings(): Settings {
     goalMs: row.goal_ms,
     intervalMs: row.interval_ms,
     soundEnabled: row.sound_enabled === 1,
+    backgroundId: row.background_id,
   }
 }
 
@@ -68,7 +70,7 @@ export function writeSettings(patch: Partial<Settings>): Settings {
   db.prepare(
     `UPDATE settings
        SET nickname = ?, course_name = ?, instructor_name = ?,
-           goal_ms = ?, interval_ms = ?, sound_enabled = ?
+           goal_ms = ?, interval_ms = ?, sound_enabled = ?, background_id = ?
      WHERE id = 1`,
   ).run(
     next.nickname.trim(),
@@ -77,6 +79,7 @@ export function writeSettings(patch: Partial<Settings>): Settings {
     next.goalMs,
     next.intervalMs,
     next.soundEnabled ? 1 : 0,
+    next.backgroundId,
   )
   return readSettings()
 }

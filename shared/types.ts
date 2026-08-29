@@ -24,11 +24,19 @@ export interface Settings {
   /** 반복 알림 간격. null 이면 반복 알림이 꺼진 상태다. */
   intervalMs: number | null
   soundEnabled: boolean
+  /** 배경으로 쓸 이미지. null 이면 기본 배경. */
+  backgroundId: number | null
 }
 
 export interface ScreenshotMeta {
   id: number
   takenAt: number
+  byteSize: number
+}
+
+export interface BackgroundMeta {
+  id: number
+  uploadedAt: number
   byteSize: number
 }
 

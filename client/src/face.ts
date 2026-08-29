@@ -16,6 +16,7 @@ const TEXT = '#e8ecf4'
 const DIM = '#8b94a7'
 const ACCENT = '#7aa2ff'
 const MUTED = '#5d6478'
+const SCRIM = 'rgba(6, 8, 14, 0.55)'
 
 const PADDING = 56
 const CLOCK_BASELINE = 380
@@ -28,6 +29,16 @@ export interface FaceView {
   /** 날짜 표시에 쓰는 현재 시각 */
   now: number
   paused: boolean
+  /** 배경 이미지. 없으면 기본 배경을 그린다. */
+  background: HTMLImageElement | null
+}
+
+/** 비율을 지키며 화면을 꽉 채운다. 넘치는 쪽은 잘린다. */
+function drawCover(ctx: CanvasRenderingContext2D, image: HTMLImageElement): void {
+  const scale = Math.max(FACE_WIDTH / image.naturalWidth, FACE_HEIGHT / image.naturalHeight)
+  const width = image.naturalWidth * scale
+  const height = image.naturalHeight * scale
+  ctx.drawImage(image, (FACE_WIDTH - width) / 2, (FACE_HEIGHT - height) / 2, width, height)
 }
 
 /** 폭을 넘기면 글자 크기를 줄여서 그린다. 긴 강의명이 캔버스 밖으로 나가지 않게. */
@@ -58,19 +69,35 @@ export function drawFace(ctx: CanvasRenderingContext2D, view: FaceView): void {
   ctx.fillStyle = BG
   ctx.fillRect(0, 0, FACE_WIDTH, FACE_HEIGHT)
 
-  // 배경 이미지(FR-4)가 붙기 전까지의 기본 배경
-  const glow = ctx.createRadialGradient(
-    FACE_WIDTH / 2,
-    FACE_HEIGHT / 2,
-    0,
-    FACE_WIDTH / 2,
-    FACE_HEIGHT / 2,
-    FACE_WIDTH * 0.65,
-  )
-  glow.addColorStop(0, 'rgba(122, 162, 255, 0.10)')
-  glow.addColorStop(1, 'rgba(0, 0, 0, 0)')
-  ctx.fillStyle = glow
-  ctx.fillRect(0, 0, FACE_WIDTH, FACE_HEIGHT)
+  const hasBackground = Boolean(view.background?.complete && view.background.naturalWidth > 0)
+
+  if (hasBackground && view.background) {
+    drawCover(ctx, view.background)
+    // 어떤 사진을 올려도 시간이 읽히도록 덮는다 (PRD 4.4)
+    ctx.fillStyle = SCRIM
+    ctx.fillRect(0, 0, FACE_WIDTH, FACE_HEIGHT)
+  } else {
+    const glow = ctx.createRadialGradient(
+      FACE_WIDTH / 2,
+      FACE_HEIGHT / 2,
+      0,
+      FACE_WIDTH / 2,
+      FACE_HEIGHT / 2,
+      FACE_WIDTH * 0.65,
+    )
+    glow.addColorStop(0, 'rgba(122, 162, 255, 0.10)')
+    glow.addColorStop(1, 'rgba(0, 0, 0, 0)')
+    ctx.fillStyle = glow
+    ctx.fillRect(0, 0, FACE_WIDTH, FACE_HEIGHT)
+  }
+
+  // 사진 위에서는 흐린 색 글자가 묻힌다. 스크림을 더 어둡게 하면 사진이 죽으므로
+  // 글자에만 그림자를 넣는다. 배경이 없을 때는 필요 없다.
+  if (hasBackground) {
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.85)'
+    ctx.shadowBlur = 14
+    ctx.shadowOffsetY = 2
+  }
 
   // 닉네임 (좌상단) — 비어 있으면 아무것도 그리지 않는다 (PRD 4.6)
   if (view.nickname) {

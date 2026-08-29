@@ -8,14 +8,15 @@ interface Props {
   serverNow: () => number
   /** 스크린샷(FR-2)이 같은 캔버스를 써야 해서 소유권을 위로 올렸다 */
   canvasRef: RefObject<HTMLCanvasElement | null>
+  background: HTMLImageElement | null
 }
 
 const MAX_DPR = 3
 
-export function WatchCanvas({ state, serverNow, canvasRef }: Props) {
+export function WatchCanvas({ state, serverNow, canvasRef, background }: Props) {
   // rAF 루프는 한 번만 만들고, 최신 값은 ref 로 읽는다
-  const latest = useRef({ state, serverNow })
-  latest.current = { state, serverNow }
+  const latest = useRef({ state, serverNow, background })
+  latest.current = { state, serverNow, background }
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -24,7 +25,7 @@ export function WatchCanvas({ state, serverNow, canvasRef }: Props) {
 
     let frame = 0
     const render = () => {
-      const { state, serverNow } = latest.current
+      const { state, serverNow, background } = latest.current
       const dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR)
       const width = Math.round(FACE_WIDTH * dpr)
       const height = Math.round(FACE_HEIGHT * dpr)
@@ -43,6 +44,7 @@ export function WatchCanvas({ state, serverNow, canvasRef }: Props) {
         elapsedMs: session ? elapsedMs(session.startedAt, session.pauses, now) : 0,
         now,
         paused: session?.state === 'paused',
+        background,
       })
 
       frame = requestAnimationFrame(render)

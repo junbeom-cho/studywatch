@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { api } from './api'
+import { BackgroundPanel } from './BackgroundPanel'
 import { Calendar } from './Calendar'
 import { DiscardButton } from './DiscardButton'
 import { SettingsPanel } from './SettingsPanel'
 import { WatchCanvas } from './WatchCanvas'
 import { captureFace } from './screenshot'
+import { useBackground } from './useBackground'
 import { useAlarms } from './useAlarms'
 import { useAppState } from './useAppState'
 
@@ -15,6 +17,7 @@ export default function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useAlarms(state, serverNow)
+  const background = useBackground(state?.settings.backgroundId ?? null)
   const [notice, setNotice] = useState<string | null>(null)
   const [capturing, setCapturing] = useState(false)
 
@@ -52,7 +55,12 @@ export default function App() {
 
   return (
     <main className="app">
-      <WatchCanvas state={state} serverNow={serverNow} canvasRef={canvasRef} />
+      <WatchCanvas
+        state={state}
+        serverNow={serverNow}
+        canvasRef={canvasRef}
+        background={background}
+      />
 
       {offline && (
         <p className="notice notice--warn">연결 끊김 — 지금 흐르는 시간은 기록되지 않는다.</p>
@@ -99,6 +107,12 @@ export default function App() {
       {notice && <p className="notice notice--small">{notice}</p>}
 
       <Calendar sessionKey={session ? String(session.id) : 'idle'} />
+
+      <BackgroundPanel
+        currentId={state.settings.backgroundId}
+        onPick={(backgroundId) => void run(() => api.saveSettings({ backgroundId }))}
+        onRefresh={() => void run(api.state)}
+      />
 
       <SettingsPanel
         settings={state.settings}

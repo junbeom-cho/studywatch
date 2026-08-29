@@ -4,7 +4,9 @@ import { resolve } from 'node:path'
 
 export const dataDir = process.env.DATA_DIR ?? resolve(process.cwd(), 'data')
 export const screenshotDir = resolve(dataDir, 'screenshots')
+export const backgroundDir = resolve(dataDir, 'backgrounds')
 mkdirSync(screenshotDir, { recursive: true })
+mkdirSync(backgroundDir, { recursive: true })
 
 export const db = new Database(resolve(dataDir, 'studywatch.db'))
 db.pragma('journal_mode = WAL')
@@ -18,7 +20,8 @@ db.exec(`
     instructor_name TEXT NOT NULL DEFAULT '',
     goal_ms         INTEGER,
     interval_ms     INTEGER,
-    sound_enabled   INTEGER NOT NULL DEFAULT 1
+    sound_enabled   INTEGER NOT NULL DEFAULT 1,
+    background_id   INTEGER
   );
 
   CREATE TABLE IF NOT EXISTS session (
@@ -47,6 +50,14 @@ db.exec(`
     byte_size INTEGER NOT NULL
   );
 
+  CREATE TABLE IF NOT EXISTS background (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    uploaded_at INTEGER NOT NULL,
+    filename    TEXT NOT NULL UNIQUE,
+    mime        TEXT NOT NULL,
+    byte_size   INTEGER NOT NULL
+  );
+
   CREATE INDEX IF NOT EXISTS idx_pause_span_session ON pause_span (session_id);
   CREATE INDEX IF NOT EXISTS idx_session_state ON session (state);
 `)
@@ -61,6 +72,7 @@ function addColumn(table: string, column: string, definition: string): void {
 addColumn('settings', 'goal_ms', 'INTEGER')
 addColumn('settings', 'interval_ms', 'INTEGER')
 addColumn('settings', 'sound_enabled', 'INTEGER NOT NULL DEFAULT 1')
+addColumn('settings', 'background_id', 'INTEGER')
 
 // 설정은 항상 한 행만 존재한다.
 db.prepare('INSERT OR IGNORE INTO settings (id) VALUES (1)').run()
