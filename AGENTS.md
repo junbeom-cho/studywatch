@@ -48,8 +48,10 @@ studywatch/
 | 로컬 실행 (컨테이너) | `docker compose up --build` | ⬜ |
 | 전체 테스트 | `npm test` | ✅ |
 | 단일 테스트 | `npx tsx --test shared/time.test.ts` | ✅ |
+| 포맷 적용 | `npm run format` | ✅ |
+| 포맷 검사 | `npm run format:check` | ✅ |
 | 타입 검사 | `npm run typecheck` | ✅ |
-| 타입 + 테스트 | `npm run check` | ✅ |
+| 포맷 + 타입 + 테스트 | `npm run check` | ✅ |
 | 프로덕션 빌드 | `npm run build` | ✅ |
 | 커밋 전 검사 | `pre-commit run --all-files` | ✅ |
 
@@ -76,7 +78,9 @@ pre-commit install           # .git/hooks/pre-commit 생성
 | DB 컬럼 | snake_case. 경계에서 camelCase 로 바꿔 내보낸다 (`store.ts`) |
 | 주석·커밋·문서 언어 | 한국어 |
 
-**포맷터는 아직 없다.** 위 규칙을 손으로 지키고 있다. 자동화하려면 Prettier 를 붙이고 이 줄을 커맨드로 바꾼다.
+포맷터가 규칙이다. 손으로 맞추지 않는다: `npm run format`
+
+표를 손으로 다듬은 마크다운은 `.prettierignore` 로 빼 두었다. 포맷터가 정렬을 흐트러뜨리기 때문이다.
 
 ## 5. 테스트
 

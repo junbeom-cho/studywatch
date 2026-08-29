@@ -1,0 +1,7 @@
+node_modules/
+dist/
+data/
+package-lock.json
+
+# 손으로 다듬은 표가 많다. 포맷터가 건드리면 diff 만 커진다.
+*.md
