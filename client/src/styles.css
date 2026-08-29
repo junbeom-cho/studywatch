@@ -131,3 +131,9 @@ body {
   color: var(--warn);
   border-color: color-mix(in srgb, var(--warn) 40%, var(--border));
 }
+
+.btn--danger {
+  color: #ff8f8f;
+  border-color: #ff8f8f;
+  background: color-mix(in srgb, #ff8f8f 12%, var(--surface));
+}

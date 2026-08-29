@@ -5,6 +5,7 @@ import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { db } from './db'
 import {
+  discardSession,
   flush,
   pauseSession,
   resumeSession,
@@ -48,6 +49,7 @@ const actions = {
   pause: pauseSession,
   resume: resumeSession,
   stop: stopSession,
+  discard: discardSession,
 } as const
 
 app.post('/api/session/:action', (c) => {

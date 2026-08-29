@@ -1,4 +1,5 @@
 import { api } from './api'
+import { DiscardButton } from './DiscardButton'
 import { SettingsPanel } from './SettingsPanel'
 import { WatchCanvas } from './WatchCanvas'
 import { useAppState } from './useAppState'
@@ -58,6 +59,7 @@ export default function App() {
             정지
           </button>
         )}
+        {session && <DiscardButton disabled={offline} onConfirm={() => void run(api.discard)} />}
       </div>
 
       <SettingsPanel

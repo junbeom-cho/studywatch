@@ -18,6 +18,7 @@ export const api = {
   pause: () => post('/api/session/pause'),
   resume: () => post('/api/session/resume'),
   stop: () => post('/api/session/stop'),
+  discard: () => post('/api/session/discard'),
   saveSettings: (patch: Partial<Settings>) =>
     request('/api/settings', { method: 'PUT', body: JSON.stringify(patch) }),
 }

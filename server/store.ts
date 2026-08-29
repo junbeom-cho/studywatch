@@ -133,6 +133,15 @@ export function stopSession(now: number): void {
   recomputeDate(studyDateOf(row.started_at), now)
 }
 
+/** 버리기 = 이번 세션을 기록에 남기지 않고 지운다. pause_span 은 CASCADE 로 함께 지워진다. */
+export function discardSession(now: number): void {
+  const row = liveRow()
+  if (!row) return
+  const date = studyDateOf(row.started_at)
+  db.prepare('DELETE FROM session WHERE id = ?').run(row.id)
+  recomputeDate(date, now)
+}
+
 export function snapshot(now: number): AppState {
   return { serverNow: now, session: currentSession(), settings: readSettings() }
 }
