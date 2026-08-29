@@ -57,6 +57,7 @@ studywatch/
 | 커밋 전 검사 | `pre-commit run --all-files` | ✅ |
 
 `npm run dev` 는 API(3000)와 Vite(5173)를 함께 띄운다. **브라우저는 5173 으로 연다** — Vite 가 `/api` 를 3000 으로 넘긴다.
+`concurrently` 의 `--raw` 를 빼면 안 된다. 기본 출력 모드에서는 `tsx watch` 가 포트를 열지 못한다(Windows).
 빌드된 프론트가 있으면 서버가 3000 한 포트에서 API 와 정적 파일을 함께 서빙한다. 컨테이너가 하나인 이유다.
 
 `docker-compose.yaml` 은 **레지스트리 이미지를 받아 쓴다**. 홈서버는 이 파일 하나만 두고 `docker compose up -d` 로 끝난다.
