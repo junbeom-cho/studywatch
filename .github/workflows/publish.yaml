@@ -3,7 +3,19 @@ name: 이미지 배포
 on:
   push:
     branches: [main]
+    # 이미지에 영향이 없는 변경으로는 빌드하지 않는다
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.gitignore'
+      - '.prettierignore'
+  # 위에서 걸러진 변경을 굳이 올리고 싶을 때 손으로 돌린다
   workflow_dispatch:
+
+# 연달아 push 하면 앞선 빌드를 취소한다. 어차피 마지막 것만 latest 가 된다.
+concurrency:
+  group: publish
+  cancel-in-progress: true
 
 env:
   # 레포 이름과 분리해 둔다. 레포를 rename 해도 홈서버 compose 를 고치지 않아도 된다.
