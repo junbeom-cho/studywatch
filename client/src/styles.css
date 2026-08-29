@@ -4,7 +4,8 @@
   --border: #232836;
   --text: #e8ecf4;
   --dim: #8b94a7;
-  --accent: #7aa2ff;
+  --accent: #00c471;
+  --accent-strong: #00a760;
   --warn: #ffb86b;
   color-scheme: dark;
 }
@@ -73,7 +74,7 @@ body {
 .btn--primary {
   background: var(--accent);
   border-color: var(--accent);
-  color: #0a0d16;
+  color: #05130c;
 }
 
 .btn--ghost {
@@ -365,20 +366,20 @@ body {
 }
 
 .day--1 {
-  background: #1e3a6b;
+  background: #006c3e;
   color: var(--text);
 }
 .day--2 {
-  background: #2b5bb0;
+  background: #00894f;
   color: var(--text);
 }
 .day--3 {
-  background: #4a82e0;
-  color: #0a0d16;
+  background: #00a760;
+  color: #05130c;
 }
 .day--4 {
-  background: #7aa2ff;
-  color: #0a0d16;
+  background: #00c471;
+  color: #05130c;
 }
 
 .day--today {
@@ -434,4 +435,10 @@ body {
 
 .shots__item:hover img {
   border-color: var(--accent);
+}
+
+.icon {
+  flex: 0 0 auto;
+  vertical-align: -3px;
+  margin-right: 7px;
 }

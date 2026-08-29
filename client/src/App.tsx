@@ -5,6 +5,7 @@ import { api } from './api'
 import { BackgroundPanel } from './BackgroundPanel'
 import { Calendar } from './Calendar'
 import { DiscardButton } from './DiscardButton'
+import { Icon } from './Icon'
 import { PipView } from './PipView'
 import { SettingsPanel } from './SettingsPanel'
 import { WatchCanvas } from './WatchCanvas'
@@ -103,11 +104,13 @@ export default function App() {
             disabled={offline}
             onClick={() => void run(api.start)}
           >
+            <Icon name="play" />
             시작
           </button>
         )}
         {session?.state === 'running' && (
           <button className="btn" disabled={offline} onClick={() => void run(api.pause)}>
+            <Icon name="pause" />
             일시정지
           </button>
         )}
@@ -117,11 +120,13 @@ export default function App() {
             disabled={offline}
             onClick={() => void run(api.resume)}
           >
+            <Icon name="play" />
             재개
           </button>
         )}
         {session && (
           <button className="btn btn--ghost" disabled={offline} onClick={stop}>
+            <Icon name="stop" />
             정지
           </button>
         )}
@@ -135,10 +140,12 @@ export default function App() {
 
       <div className="controls">
         <button className="btn" disabled={capturing} onClick={() => void capture()}>
+          <Icon name="camera" />
           {capturing ? '찍는 중…' : '스크린샷'}
         </button>
         {pipSupported() && (
           <button className="btn" onClick={() => (pip ? closePip() : void openPip())}>
+            <Icon name="pip" />
             {pip ? 'PIP 닫기' : 'PIP'}
           </button>
         )}

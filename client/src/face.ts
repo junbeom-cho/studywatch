@@ -18,7 +18,7 @@ const MONO = "'Cascadia Mono', Consolas, ui-monospace, monospace"
 const BG = '#0b0d12'
 const TEXT = '#e8ecf4'
 const DIM = '#8b94a7'
-const ACCENT = '#7aa2ff'
+const ACCENT = '#00c471'
 const MUTED = '#5d6478'
 const SCRIM = 'rgba(6, 8, 14, 0.55)'
 
@@ -36,8 +36,11 @@ const CLOCK_BASELINE = 470
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
 
+/** 작심삼일을 넘겼다는 표시. 하루 이틀에 붙이면 의미가 없다. */
+const STREAK_FIRE_FROM = 3
+
 /** 칸 색. 0 단계는 어떤 배경 위에서도 보이도록 반투명으로 둔다. */
-const LEVEL_FILL = ['rgba(255, 255, 255, 0.07)', '#1e3a6b', '#2b5bb0', '#4a82e0', '#7aa2ff']
+const LEVEL_FILL = ['rgba(255, 255, 255, 0.07)', '#006c3e', '#00894f', '#00a760', '#00c471']
 
 export interface FaceCalendar {
   year: number
@@ -176,7 +179,7 @@ function drawMonth(ctx: CanvasRenderingContext2D, calendar: FaceCalendar): void 
       ctx.textBaseline = 'middle'
       ctx.font = `600 20px ${SANS}`
       // 밝은 칸 위에서는 어두운 글씨라야 읽힌다
-      ctx.fillStyle = level >= 3 ? '#0a0d16' : level === 0 ? MUTED : TEXT
+      ctx.fillStyle = level >= 3 ? '#05130c' : level === 0 ? MUTED : TEXT
       ctx.fillText(String(Number(date.slice(8))), x + CELL / 2, y + CELL / 2 + 1)
     })
   })
@@ -185,7 +188,10 @@ function drawMonth(ctx: CanvasRenderingContext2D, calendar: FaceCalendar): void 
   ctx.textBaseline = 'alphabetic'
   ctx.font = `700 42px ${SANS}`
   ctx.fillStyle = calendar.streak > 0 ? ACCENT : MUTED
-  ctx.fillText(calendar.streak > 0 ? `연속 ${calendar.streak}일` : '연속 기록 없음', RIGHT_X, 716)
+
+  const streakLabel = calendar.streak > 0 ? `연속 ${calendar.streak}일` : '연속 기록 없음'
+  const fire = calendar.streak >= STREAK_FIRE_FROM ? '🔥 ' : ''
+  ctx.fillText(fire + streakLabel, RIGHT_X, 716)
 }
 
 export function drawFace(ctx: CanvasRenderingContext2D, view: FaceView): void {
@@ -211,7 +217,7 @@ export function drawFace(ctx: CanvasRenderingContext2D, view: FaceView): void {
       FACE_HEIGHT / 2,
       FACE_WIDTH * 0.55,
     )
-    glow.addColorStop(0, 'rgba(122, 162, 255, 0.10)')
+    glow.addColorStop(0, 'rgba(0, 196, 113, 0.10)')
     glow.addColorStop(1, 'rgba(0, 0, 0, 0)')
     ctx.fillStyle = glow
     ctx.fillRect(0, 0, FACE_WIDTH, FACE_HEIGHT)

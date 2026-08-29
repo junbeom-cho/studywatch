@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { Icon } from './Icon'
 
 interface Props {
   disabled: boolean
@@ -36,6 +37,7 @@ export function DiscardButton({ disabled, onConfirm }: Props) {
       disabled={disabled}
       onClick={click}
     >
+      <Icon name="trash" />
       {armed ? '정말 버릴까?' : '버리기'}
     </button>
   )
