@@ -77,8 +77,10 @@ body {
 }
 
 .btn--ghost {
-  flex: 0 1 120px;
+  /* 라벨이 "정말 버릴까?" 로 바뀌어도 폭이 흔들리지 않게 고정한다 */
+  flex: 0 0 140px;
   color: var(--dim);
+  white-space: nowrap;
 }
 
 .settings {
