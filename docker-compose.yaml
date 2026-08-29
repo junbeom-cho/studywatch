@@ -5,7 +5,7 @@ services:
     restart: unless-stopped
     ports:
       # Tailscale 로 붙으므로 공개 인터넷에 열지 않는다 (PRD NG-2)
-      - "3000:3000"
+      - '3000:3000'
     environment:
       # 04:00 학습일 경계가 이 타임존을 기준으로 계산된다
       TZ: Asia/Seoul

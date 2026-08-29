@@ -60,8 +60,12 @@ export function drawFace(ctx: CanvasRenderingContext2D, view: FaceView): void {
 
   // 배경 이미지(FR-4)가 붙기 전까지의 기본 배경
   const glow = ctx.createRadialGradient(
-    FACE_WIDTH / 2, FACE_HEIGHT / 2, 0,
-    FACE_WIDTH / 2, FACE_HEIGHT / 2, FACE_WIDTH * 0.65,
+    FACE_WIDTH / 2,
+    FACE_HEIGHT / 2,
+    0,
+    FACE_WIDTH / 2,
+    FACE_HEIGHT / 2,
+    FACE_WIDTH * 0.65,
   )
   glow.addColorStop(0, 'rgba(122, 162, 255, 0.10)')
   glow.addColorStop(1, 'rgba(0, 0, 0, 0)')

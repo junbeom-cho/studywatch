@@ -24,7 +24,12 @@ export function SettingsPanel({ settings, onSave }: Props) {
     if (!pending.current) setDraft(settings)
   }, [settings])
 
-  useEffect(() => () => { if (timer.current) clearTimeout(timer.current) }, [])
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current)
+    },
+    [],
+  )
 
   const edit = (key: keyof Settings, value: string) => {
     const next = { ...draft, [key]: value }

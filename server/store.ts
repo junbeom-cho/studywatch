@@ -81,10 +81,12 @@ export function recomputeDate(date: string, now: number): void {
     total += elapsedMs(session.started_at, pausesOf(session.id), session.stopped_at ?? now)
   }
 
-  db.prepare(`
+  db.prepare(
+    `
     INSERT INTO daily_study (study_date, total_ms) VALUES (?, ?)
     ON CONFLICT(study_date) DO UPDATE SET total_ms = excluded.total_ms
-  `).run(date, total)
+  `,
+  ).run(date, total)
 }
 
 /** 진행 중인 세션을 집계에 반영한다. */
@@ -128,7 +130,10 @@ export function stopSession(now: number): void {
     db.prepare(
       'UPDATE pause_span SET resumed_at = ? WHERE session_id = ? AND resumed_at IS NULL',
     ).run(now, row.id)
-    db.prepare("UPDATE session SET state = 'finished', stopped_at = ? WHERE id = ?").run(now, row.id)
+    db.prepare("UPDATE session SET state = 'finished', stopped_at = ? WHERE id = ?").run(
+      now,
+      row.id,
+    )
   })()
   recomputeDate(studyDateOf(row.started_at), now)
 }

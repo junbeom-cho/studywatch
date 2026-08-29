@@ -25,9 +25,7 @@ export default function App() {
       <WatchCanvas state={state} serverNow={serverNow} />
 
       {offline && (
-        <p className="notice notice--warn">
-          연결 끊김 — 지금 흐르는 시간은 기록되지 않는다.
-        </p>
+        <p className="notice notice--warn">연결 끊김 — 지금 흐르는 시간은 기록되지 않는다.</p>
       )}
 
       <div className="controls">

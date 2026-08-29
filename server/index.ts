@@ -69,7 +69,9 @@ if (existsSync(resolve(process.cwd(), CLIENT_DIR))) {
   app.get('*', serveStatic({ path: `${CLIENT_DIR}/index.html` }))
 } else {
   app.get('/', (c) =>
-    c.text('빌드된 프론트가 없다. 개발 중이면 http://localhost:5173 을, 아니면 npm run build 를 쓴다.'),
+    c.text(
+      '빌드된 프론트가 없다. 개발 중이면 http://localhost:5173 을, 아니면 npm run build 를 쓴다.',
+    ),
   )
 }
 
