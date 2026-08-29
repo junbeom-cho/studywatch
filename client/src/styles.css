@@ -442,3 +442,62 @@ body {
   vertical-align: -3px;
   margin-right: 7px;
 }
+
+.tabs {
+  display: flex;
+  gap: 6px;
+  padding: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+
+.tab {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--dim);
+  text-decoration: none;
+  border-radius: 10px;
+}
+
+.tab:hover {
+  color: var(--text);
+  background: var(--bg);
+}
+
+.tab--on {
+  color: #05130c;
+  background: var(--accent);
+}
+
+.tab--on:hover {
+  color: #05130c;
+  background: var(--accent);
+}
+
+/* 다른 탭에 있어도 시계가 돌고 있다는 것을 알 수 있게 */
+.tab__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tab__dot {
+    animation: none;
+  }
+}

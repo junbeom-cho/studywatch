@@ -8,6 +8,7 @@ import { DiscardButton } from './DiscardButton'
 import { Icon } from './Icon'
 import { PipView } from './PipView'
 import { SettingsPanel } from './SettingsPanel'
+import { Tabs } from './Tabs'
 import { WatchCanvas } from './WatchCanvas'
 import { streakOf } from './calendarGrid'
 import { captureFace } from './screenshot'
@@ -15,12 +16,14 @@ import { useAlarms } from './useAlarms'
 import { useAppState } from './useAppState'
 import { useBackground } from './useBackground'
 import { useCalendar } from './useCalendar'
+import { useHashRoute } from './useHashRoute'
 import { pipSupported, usePipWindow } from './usePipWindow'
 
 const NOTICE_MS = 6000
 
 export default function App() {
   const { state, connection, serverNow, run } = useAppState()
+  const route = useHashRoute()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [capturing, setCapturing] = useState(false)
@@ -78,79 +81,102 @@ export default function App() {
 
   const session = state.session
   const offline = connection === 'offline'
-
-  const stop = () => {
-    void run(api.stop).then(reloadCalendar)
-  }
+  const stop = () => void run(api.stop).then(reloadCalendar)
 
   return (
     <main className="app">
-      <WatchCanvas
-        state={state}
-        serverNow={serverNow}
-        canvasRef={canvasRef}
-        background={background}
-        calendar={faceCalendar}
-      />
+      <Tabs current={route} running={session?.state === 'running'} />
 
-      {offline && (
-        <p className="notice notice--warn">연결 끊김 — 지금 흐르는 시간은 기록되지 않는다.</p>
+      {route === 'watch' && (
+        <>
+          <WatchCanvas
+            state={state}
+            serverNow={serverNow}
+            canvasRef={canvasRef}
+            background={background}
+            calendar={faceCalendar}
+          />
+
+          {offline && (
+            <p className="notice notice--warn">연결 끊김 — 지금 흐르는 시간은 기록되지 않는다.</p>
+          )}
+
+          <div className="controls">
+            {!session && (
+              <button
+                className="btn btn--primary"
+                disabled={offline}
+                onClick={() => void run(api.start)}
+              >
+                <Icon name="play" />
+                시작
+              </button>
+            )}
+            {session?.state === 'running' && (
+              <button className="btn" disabled={offline} onClick={() => void run(api.pause)}>
+                <Icon name="pause" />
+                일시정지
+              </button>
+            )}
+            {session?.state === 'paused' && (
+              <button
+                className="btn btn--primary"
+                disabled={offline}
+                onClick={() => void run(api.resume)}
+              >
+                <Icon name="play" />
+                재개
+              </button>
+            )}
+            {session && (
+              <button className="btn btn--ghost" disabled={offline} onClick={stop}>
+                <Icon name="stop" />
+                정지
+              </button>
+            )}
+            {session && (
+              <DiscardButton
+                disabled={offline}
+                onConfirm={() => void run(api.discard).then(reloadCalendar)}
+              />
+            )}
+          </div>
+
+          <div className="controls">
+            <button className="btn" disabled={capturing} onClick={() => void capture()}>
+              <Icon name="camera" />
+              {capturing ? '찍는 중…' : '스크린샷'}
+            </button>
+            {pipSupported() && (
+              <button className="btn" onClick={() => (pip ? closePip() : void openPip())}>
+                <Icon name="pip" />
+                {pip ? 'PIP 닫기' : 'PIP'}
+              </button>
+            )}
+          </div>
+
+          {pipProblem && <p className="notice notice--small">{pipProblem}</p>}
+          {notice && <p className="notice notice--small">{notice}</p>}
+        </>
       )}
 
-      <div className="controls">
-        {!session && (
-          <button
-            className="btn btn--primary"
-            disabled={offline}
-            onClick={() => void run(api.start)}
-          >
-            <Icon name="play" />
-            시작
-          </button>
-        )}
-        {session?.state === 'running' && (
-          <button className="btn" disabled={offline} onClick={() => void run(api.pause)}>
-            <Icon name="pause" />
-            일시정지
-          </button>
-        )}
-        {session?.state === 'paused' && (
-          <button
-            className="btn btn--primary"
-            disabled={offline}
-            onClick={() => void run(api.resume)}
-          >
-            <Icon name="play" />
-            재개
-          </button>
-        )}
-        {session && (
-          <button className="btn btn--ghost" disabled={offline} onClick={stop}>
-            <Icon name="stop" />
-            정지
-          </button>
-        )}
-        {session && (
-          <DiscardButton
-            disabled={offline}
-            onConfirm={() => void run(api.discard).then(reloadCalendar)}
+      {route === 'log' && <Calendar calendar={calendar} shotKey={shotKey} />}
+
+      {route === 'settings' && (
+        <>
+          <BackgroundPanel
+            currentId={state.settings.backgroundId}
+            onPick={(backgroundId) => void run(() => api.saveSettings({ backgroundId }))}
+            onRefresh={() => void run(api.state)}
           />
-        )}
-      </div>
+          <SettingsPanel
+            settings={state.settings}
+            onSave={(patch) => void run(() => api.saveSettings(patch))}
+          />
+        </>
+      )}
 
-      <div className="controls">
-        <button className="btn" disabled={capturing} onClick={() => void capture()}>
-          <Icon name="camera" />
-          {capturing ? '찍는 중…' : '스크린샷'}
-        </button>
-        {pipSupported() && (
-          <button className="btn" onClick={() => (pip ? closePip() : void openPip())}>
-            <Icon name="pip" />
-            {pip ? 'PIP 닫기' : 'PIP'}
-          </button>
-        )}
-      </div>
-
+      {/* PIP 창은 탭 밖에 둔다. 기록·설정 탭으로 옮겨도 계속 떠 있어야 한다. */}
       {pip &&
         createPortal(
           <PipView
@@ -166,22 +192,6 @@ export default function App() {
           />,
           pip.document.body,
         )}
-
-      {pipProblem && <p className="notice notice--small">{pipProblem}</p>}
-      {notice && <p className="notice notice--small">{notice}</p>}
-
-      <Calendar calendar={calendar} shotKey={shotKey} />
-
-      <BackgroundPanel
-        currentId={state.settings.backgroundId}
-        onPick={(backgroundId) => void run(() => api.saveSettings({ backgroundId }))}
-        onRefresh={() => void run(api.state)}
-      />
-
-      <SettingsPanel
-        settings={state.settings}
-        onSave={(patch) => void run(() => api.saveSettings(patch))}
-      />
     </main>
   )
 }
