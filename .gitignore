@@ -1,3 +1,45 @@
-# Common
+# ─────────────────────────────────────────────
+# 공통 .gitignore
+# 언어·프레임워크별 규칙은 맨 아래 '프로젝트별 추가 구간'에 덧붙인다.
+# ─────────────────────────────────────────────
+
+# ── 비밀정보 ──
 .env
+.env.*
+!.env.example
+*.pem
+*.key
+id_rsa*
+secrets.*
+credentials.*
+
+# ── OS ──
 .DS_Store
+Thumbs.db
+desktop.ini
+# Office 임시 잠금파일 (~$메모.xlsx)
+~$*
+
+# ── 에디터 / 로컬 도구 상태 ──
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+# .claude/ 전체가 아니다 — settings.json은 공유용이라 커밋 대상이다.
+.claude/settings.local.json
+
+# ── 로그 / 임시 ──
+*.log
+logs/
+tmp/
+.cache/
+
+# ── 언어 무관 최소 집합 (어떤 스택에서도 커밋하지 않는 것만) ──
+node_modules/
+__pycache__/
+.venv/
+
+# ─────────────────────────────────────────────
+# 프로젝트별 추가 구간 — 스택이 정해지면 아래에 덧붙인다.
+# dist/ build/ target/ out/ 은 레포마다 추적 의도가 달라 템플릿에 넣지 않는다.
+# ─────────────────────────────────────────────
