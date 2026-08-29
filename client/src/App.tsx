@@ -146,7 +146,7 @@ export default function App() {
             {session && (
               <button className="btn btn--ghost" disabled={offline} onClick={stop}>
                 <Icon name="stop" />
-                정지
+                기록
               </button>
             )}
             {session && (
@@ -175,7 +175,9 @@ export default function App() {
         </>
       )}
 
-      {route === 'log' && <Calendar calendar={calendar} shotKey={shotKey} />}
+      {route === 'log' && (
+        <Calendar calendar={calendar} shotKey={shotKey} onChanged={reloadCalendar} />
+      )}
 
       {route === 'settings' && (
         <>

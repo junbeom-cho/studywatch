@@ -61,7 +61,7 @@ export function PipView({
         )}
         {session && (
           <button className="btn btn--ghost" disabled={offline} onClick={onStop}>
-            정지
+            기록
           </button>
         )}
       </div>

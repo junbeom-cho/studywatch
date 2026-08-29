@@ -1,6 +1,6 @@
 import { db } from './db'
 import { elapsedMs, studyDateOf } from '../shared/time'
-import type { AppState, PauseSpan, SessionSnapshot, Settings } from '../shared/types'
+import type { AppState, PauseSpan, SessionRecord, SessionSnapshot, Settings } from '../shared/types'
 
 interface SessionRow {
   id: number
@@ -176,6 +176,55 @@ export function studyTotals(from: string, to: string): Record<string, number> {
     .all(from, to) as Array<{ study_date: string; total_ms: number }>
 
   return Object.fromEntries(rows.map((row) => [row.study_date, row.total_ms]))
+}
+
+/**
+ * 세션 원본에서 집계를 통째로 다시 만든다.
+ * daily_study 는 파생 데이터이므로 언제든 원본에서 재현될 수 있어야 한다 (PRD 5.2).
+ * 기록을 손으로 지웠거나 집계가 어긋났을 때 이것만 돌리면 맞춰진다.
+ */
+export function rebuildDaily(now: number): number {
+  const rows = db.prepare('SELECT started_at FROM session').all() as Array<{ started_at: number }>
+  const dates = new Set(rows.map((row) => studyDateOf(row.started_at)))
+
+  // 세션이 모두 사라진 날은 집계도 남아 있으면 안 된다
+  const stale = db.prepare('SELECT study_date FROM daily_study').all() as Array<{
+    study_date: string
+  }>
+  for (const row of stale) dates.add(row.study_date)
+
+  for (const date of dates) recomputeDate(date, now)
+  return dates.size
+}
+
+/** 그 학습일에 시작한 기록들. 최근 것이 앞에 온다. */
+export function sessionsOn(date: string, now: number): SessionRecord[] {
+  const rows = db.prepare('SELECT * FROM session ORDER BY started_at DESC').all() as SessionRow[]
+
+  return rows
+    .filter((row) => studyDateOf(row.started_at) === date)
+    .map((row) => ({
+      id: row.id,
+      startedAt: row.started_at,
+      stoppedAt: row.stopped_at,
+      elapsedMs: elapsedMs(row.started_at, pausesOf(row.id), row.stopped_at ?? now),
+      live: row.state !== 'finished',
+    }))
+}
+
+/**
+ * 지난 기록 하나를 지운다. 돌고 있는 세션은 여기서 지우지 않는다 —
+ * 그건 버리기가 할 일이고, 화면에서도 다른 버튼이라야 헷갈리지 않는다.
+ */
+export function removeSession(id: number, now: number): 'gone' | 'live' | 'removed' {
+  const row = db.prepare('SELECT * FROM session WHERE id = ?').get(id) as SessionRow | undefined
+  if (!row) return 'gone'
+  if (row.state !== 'finished') return 'live'
+
+  const date = studyDateOf(row.started_at)
+  db.prepare('DELETE FROM session WHERE id = ?').run(id)
+  recomputeDate(date, now)
+  return 'removed'
 }
 
 export function snapshot(now: number): AppState {

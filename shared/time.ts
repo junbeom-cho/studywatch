@@ -101,3 +101,9 @@ export function formatDuration(ms: number): string {
   const rest = minutes % 60
   return rest === 0 ? `${hours}시간` : `${hours}시간 ${rest}분`
 }
+
+/** 14:03 — 기록 목록에서 시작·종료 시각을 적을 때 쓴다 */
+export function formatClock(ts: number): string {
+  const d = new Date(ts)
+  return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`
+}

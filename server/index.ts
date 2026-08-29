@@ -8,6 +8,9 @@ import { db } from './db'
 import {
   discardSession,
   flush,
+  rebuildDaily,
+  removeSession,
+  sessionsOn,
   studyTotals,
   pauseSession,
   resumeSession,
@@ -154,6 +157,29 @@ app.delete('/api/backgrounds/:id', (c) => {
   return c.json(snapshot(Date.now()))
 })
 
+const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
+
+app.get('/api/sessions', (c) => {
+  const date = c.req.query('date') ?? ''
+  if (!DATE_PATTERN.test(date)) return c.json({ error: 'date 는 YYYY-MM-DD 여야 한다' }, 400)
+
+  const now = Date.now()
+  flush(now) // 돌고 있는 세션도 최신 값으로 보이게 한다
+  return c.json(sessionsOn(date, now))
+})
+
+app.delete('/api/sessions/:id', (c) => {
+  const id = Number(c.req.param('id'))
+  if (!Number.isInteger(id)) return c.json({ error: '없는 기록이다' }, 404)
+
+  const result = removeSession(id, Date.now())
+  if (result === 'gone') return c.json({ error: '없는 기록이다' }, 404)
+  if (result === 'live') {
+    return c.json({ error: '지금 돌고 있는 기록이다. 버리기를 쓴다.' }, 409)
+  }
+  return c.json({ ok: true })
+})
+
 app.get('/api/calendar', (c) => {
   const now = Date.now()
   // 진행 중인 세션을 먼저 반영해야 오늘 칸이 최신이다
@@ -201,6 +227,9 @@ if (existsSync(resolve(process.cwd(), CLIENT_DIR))) {
     ),
   )
 }
+
+// 집계가 원본과 어긋난 채로 뜨지 않게 부팅 때 한 번 맞춘다.
+rebuildDaily(Date.now())
 
 // 탭이 갑자기 닫혀도 기록이 남도록 진행 중인 세션을 주기적으로 집계에 반영한다.
 const flushTimer = setInterval(() => flush(Date.now()), FLUSH_INTERVAL_MS)

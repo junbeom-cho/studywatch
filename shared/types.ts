@@ -43,6 +43,16 @@ export interface BackgroundMeta {
   byteSize: number
 }
 
+/** 지난 기록 하나. 기록 화면에서 지울 수 있게 id 를 함께 준다. */
+export interface SessionRecord {
+  id: number
+  startedAt: number
+  stoppedAt: number | null
+  elapsedMs: number
+  /** 아직 돌고 있는 세션이면 지울 수 없다 — 버리기를 써야 한다 */
+  live: boolean
+}
+
 export interface CalendarData {
   /** 오늘의 학습일. 자정이 아니라 세션 시작일 기준이므로 서버가 정해서 내려준다. */
   today: string

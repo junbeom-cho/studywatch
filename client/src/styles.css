@@ -548,3 +548,73 @@ body {
 .tab--icon .icon {
   margin: 0;
 }
+
+.records {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.records__empty {
+  margin: 0;
+  font-size: 14px;
+  color: var(--dim);
+}
+
+.record {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.record--live {
+  border-color: var(--accent);
+}
+
+.record__span {
+  font-size: 14px;
+  color: var(--dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.record__time {
+  flex: 1 1 auto;
+  font-size: 15px;
+}
+
+.record__note {
+  font-size: 13px;
+  color: var(--accent);
+}
+
+.record__remove {
+  display: flex;
+  align-items: center;
+  padding: 6px 10px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--dim);
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.record__remove:hover {
+  color: #ff8f8f;
+}
+
+.record__remove--armed {
+  color: #ff8f8f;
+  border-color: #ff8f8f;
+}
+
+.record__remove .icon {
+  margin: 0;
+}

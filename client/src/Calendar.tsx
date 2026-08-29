@@ -2,17 +2,20 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { currentMonth, monthGrid, shiftMonth } from '../../shared/month'
 import { formatDuration, studyDateOf } from '../../shared/time'
 import type { CalendarData, ScreenshotMeta } from '../../shared/types'
+import { SessionList } from './SessionList'
 import { levelOf } from './calendarGrid'
 
 interface Props {
   calendar: CalendarData | null
   /** 스크린샷을 찍을 때마다 바뀐다. 목록을 다시 읽는 신호. */
   shotKey: number
+  /** 기록을 지우면 달력 숫자도 다시 읽어야 한다 */
+  onChanged: () => void
 }
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
 
-export function Calendar({ calendar, shotKey }: Props) {
+export function Calendar({ calendar, shotKey, onChanged }: Props) {
   const [view, setView] = useState(() => currentMonth(Date.now()))
   const [picked, setPicked] = useState<string | null>(null)
   const [shots, setShots] = useState<ScreenshotMeta[]>([])
@@ -117,6 +120,8 @@ export function Calendar({ calendar, shotKey }: Props) {
             {picked} · {formatDuration(totals[picked] ?? 0)}
             {pickedShots.length > 0 ? ` · 스크린샷 ${pickedShots.length}장` : ' · 스크린샷 없음'}
           </span>
+
+          <SessionList date={picked} onChanged={onChanged} />
           {pickedShots.length > 0 && (
             <div className="shots__list">
               {pickedShots.map((shot) => (

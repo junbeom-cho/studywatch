@@ -4,7 +4,7 @@ export type Route = 'watch' | 'log' | 'settings'
 
 export const ROUTES: ReadonlyArray<{ id: Route; label: string }> = [
   { id: 'watch', label: '스톱워치' },
-  { id: 'log', label: '기록' },
+  { id: 'log', label: '달력' },
   { id: 'settings', label: '설정' },
 ]
 
