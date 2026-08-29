@@ -1,6 +1,7 @@
 import { existsSync, unlinkSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { backgroundDir, db } from './db'
+import { availableName } from './files'
 import type { BackgroundMeta } from '../shared/types'
 
 /** 배경은 골라 쓰는 것이지 모아 두는 것이 아니다. 이 정도면 충분하다. */
@@ -45,7 +46,12 @@ export function saveBackground(
   uploadedAt: number,
 ): BackgroundMeta {
   const extension = ALLOWED_MIME[mime] ?? 'bin'
-  const filename = `background-${uploadedAt}.${extension}`
+  const filename = availableName(
+    backgroundDir,
+    `background-${uploadedAt}`,
+    extension,
+    (name) => db.prepare('SELECT 1 FROM background WHERE filename = ?').get(name) !== undefined,
+  )
   writeFileSync(resolve(backgroundDir, filename), bytes)
 
   const info = db

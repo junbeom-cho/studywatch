@@ -65,6 +65,16 @@ describe('배경 보관', () => {
     assert.equal(readSettings().backgroundId, keep.id)
   })
 
+  it('같은 밀리초에 두 번 올려도 서로 다른 파일이 된다', () => {
+    const at = Date.now()
+    const first = saveBackground(PNG, 'image/png', at)
+    const second = saveBackground(PNG, 'image/png', at)
+
+    assert.notEqual(first.id, second.id)
+    assert.notEqual(backgroundFile(first.id)?.path, backgroundFile(second.id)?.path)
+    assert.ok(backgroundFile(first.id), '먼저 올린 것이 살아 있어야 한다')
+  })
+
   it('없는 id 는 지워지지 않는다', () => {
     const before = files().length
     assert.equal(removeBackground(999_999), false)

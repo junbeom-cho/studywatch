@@ -1,6 +1,7 @@
 import { existsSync, unlinkSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { db, screenshotDir } from './db'
+import { availableName } from './files'
 import type { ScreenshotMeta } from '../shared/types'
 
 /** 홈서버 볼륨이 무한정 커지지 않게 최근 것만 남긴다. (PRD 6 Q-1) */
@@ -19,13 +20,17 @@ const toMeta = (row: ScreenshotRow): ScreenshotMeta => ({
   byteSize: row.byte_size,
 })
 
-/** studywatch-20260830-023301-123.png — 사람이 읽을 수 있고 밀리초까지 있어 겹치지 않는다 */
+const isRegistered = (name: string): boolean =>
+  db.prepare('SELECT 1 FROM screenshot WHERE filename = ?').get(name) !== undefined
+
+/** studywatch-20260830-023301-123.png — 폴더에서 눈으로 훑을 수 있게 시각을 넣는다 */
 function filenameFor(takenAt: number): string {
   const d = new Date(takenAt)
   const p = (n: number, width = 2) => String(n).padStart(width, '0')
   const date = `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}`
   const time = `${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`
-  return `studywatch-${date}-${time}-${p(d.getMilliseconds(), 3)}.png`
+  const base = `studywatch-${date}-${time}-${p(d.getMilliseconds(), 3)}`
+  return availableName(screenshotDir, base, 'png', isRegistered)
 }
 
 /** 오래된 것부터 파일과 행을 함께 지운다. 둘 중 하나만 남으면 목록이 깨진다. */

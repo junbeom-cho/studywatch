@@ -50,6 +50,18 @@ describe('스크린샷 보관', () => {
     for (const row of rows) assert.ok(screenshotFile(row.id), `${row.id} 의 파일이 없다`)
   })
 
+  it('같은 밀리초에 두 번 저장해도 서로 다른 파일이 된다', () => {
+    // 같은 시각으로 이름을 만들면 겹친다. 겹친 채로 두면 덮어쓰거나 저장이 실패한다.
+    const at = Date.now()
+    const first = saveScreenshot(PNG, at)
+    const second = saveScreenshot(PNG, at)
+
+    assert.notEqual(first.id, second.id)
+    assert.notEqual(screenshotFile(first.id), screenshotFile(second.id))
+    assert.ok(screenshotFile(first.id), '먼저 저장한 것이 살아 있어야 한다')
+    assert.ok(screenshotFile(second.id))
+  })
+
   it('없는 id 는 null 이다', () => {
     assert.equal(screenshotFile(999_999), null)
   })
