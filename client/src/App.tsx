@@ -49,6 +49,14 @@ export default function App() {
     }
   }, [calendar])
 
+  const theme = state?.settings.theme ?? 'dark'
+
+  // PIP 창은 별도 문서라 거기에도 따로 걸어야 한다
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+    if (pip) pip.document.documentElement.dataset.theme = theme
+  }, [theme, pip])
+
   useEffect(() => {
     if (!notice) return
     const timer = setTimeout(() => setNotice(null), NOTICE_MS)
@@ -85,7 +93,14 @@ export default function App() {
 
   return (
     <main className="app">
-      <Tabs current={route} running={session?.state === 'running'} />
+      <Tabs
+        current={route}
+        running={session?.state === 'running'}
+        theme={theme}
+        onToggleTheme={() =>
+          void run(() => api.saveSettings({ theme: theme === 'dark' ? 'light' : 'dark' }))
+        }
+      />
 
       {route === 'watch' && (
         <>

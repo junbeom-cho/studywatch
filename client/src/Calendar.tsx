@@ -103,7 +103,8 @@ export function Calendar({ calendar, shotKey }: Props) {
               title={`${date} · ${total > 0 ? formatDuration(total) : '기록 없음'}`}
             >
               <span className="day__number">{Number(date.slice(8))}</span>
-              {total > 0 && <span className="day__time">{formatDuration(total)}</span>}
+              {/* 반올림해서 "0분" 이 되면 적지 않는다. 칸 색으로 이미 드러난다. */}
+              {total >= 30_000 && <span className="day__time">{formatDuration(total)}</span>}
               {shotCount > 0 && <span className="day__dot" />}
             </button>
           )

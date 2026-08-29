@@ -1,6 +1,8 @@
 import { monthGrid } from '../../shared/month'
 import { formatDate, formatElapsed } from '../../shared/time'
+import type { Theme } from '../../shared/types'
 import { levelOf } from './calendarGrid'
+import { paletteOf, type Palette } from './palette'
 
 /**
  * 스톱워치 표시면. 인증 스크린샷 한 장에 들어가야 할 것이 모두 여기 있다 —
@@ -14,13 +16,6 @@ export const FACE_HEIGHT = 900
 
 const SANS = "'Pretendard', 'Noto Sans KR', system-ui, 'Segoe UI', sans-serif"
 const MONO = "'Cascadia Mono', Consolas, ui-monospace, monospace"
-
-const BG = '#0b0d12'
-const TEXT = '#e8ecf4'
-const DIM = '#8b94a7'
-const ACCENT = '#00c471'
-const MUTED = '#5d6478'
-const SCRIM = 'rgba(6, 8, 14, 0.55)'
 
 const PADDING = 64
 const LEFT_END = 1030
@@ -38,9 +33,6 @@ const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
 
 /** 작심삼일을 넘겼다는 표시. 하루 이틀에 붙이면 의미가 없다. */
 const STREAK_FIRE_FROM = 3
-
-/** 칸 색. 0 단계는 어떤 배경 위에서도 보이도록 반투명으로 둔다. */
-const LEVEL_FILL = ['rgba(255, 255, 255, 0.07)', '#006c3e', '#00894f', '#00a760', '#00c471']
 
 export interface FaceCalendar {
   year: number
@@ -60,6 +52,7 @@ export interface FaceView {
   paused: boolean
   background: HTMLImageElement | null
   calendar: FaceCalendar | null
+  theme: Theme
 }
 
 /** 비율을 지키며 화면을 꽉 채운다. 넘치는 쪽은 잘린다. */
@@ -105,7 +98,7 @@ function roundedRect(
 }
 
 /** 시:분:초는 크게, 밀리초는 조금 작게. 둘 다 항상 보인다. */
-function drawClock(ctx: CanvasRenderingContext2D, view: FaceView): void {
+function drawClock(ctx: CanvasRenderingContext2D, view: FaceView, palette: Palette): void {
   const { clock, millis } = formatElapsed(view.elapsedMs)
   const millisText = `.${millis}`
   let clockSize = 152
@@ -132,27 +125,27 @@ function drawClock(ctx: CanvasRenderingContext2D, view: FaceView): void {
   let x = LEFT_CENTER - (sizes.clockWidth + sizes.millisWidth) / 2
 
   ctx.font = `700 ${clockSize}px ${MONO}`
-  ctx.fillStyle = view.paused ? DIM : TEXT
+  ctx.fillStyle = view.paused ? palette.dim : palette.text
   ctx.fillText(clock, x, CLOCK_BASELINE)
 
   x += sizes.clockWidth
   ctx.font = `700 ${millisSize}px ${MONO}`
-  ctx.fillStyle = view.paused ? MUTED : ACCENT
+  ctx.fillStyle = view.paused ? palette.muted : palette.accent
   ctx.fillText(millisText, x, CLOCK_BASELINE)
 }
 
-function drawMonth(ctx: CanvasRenderingContext2D, calendar: FaceCalendar): void {
+function drawMonth(ctx: CanvasRenderingContext2D, calendar: FaceCalendar, palette: Palette): void {
   const grid = monthGrid(calendar.year, calendar.month)
 
   ctx.textAlign = 'left'
   ctx.textBaseline = 'alphabetic'
-  ctx.fillStyle = TEXT
+  ctx.fillStyle = palette.text
   ctx.font = `600 38px ${SANS}`
   ctx.fillText(grid.label, RIGHT_X, 150)
 
   ctx.textAlign = 'center'
   ctx.font = `500 20px ${SANS}`
-  ctx.fillStyle = DIM
+  ctx.fillStyle = palette.dim
   WEEKDAYS.forEach((label, index) => {
     ctx.fillText(label, RIGHT_X + index * (CELL + GAP) + CELL / 2, 200)
   })
@@ -164,12 +157,12 @@ function drawMonth(ctx: CanvasRenderingContext2D, calendar: FaceCalendar): void 
       const y = GRID_TOP + row * (CELL + GAP)
       const level = levelOf(calendar.totals[date] ?? 0)
 
-      ctx.fillStyle = LEVEL_FILL[level] ?? 'transparent'
+      ctx.fillStyle = palette.levelFill[level] ?? 'transparent'
       roundedRect(ctx, x, y, CELL, CELL, 10)
       ctx.fill()
 
       if (date === calendar.today) {
-        ctx.strokeStyle = TEXT
+        ctx.strokeStyle = palette.text
         ctx.lineWidth = 2
         roundedRect(ctx, x - 3, y - 3, CELL + 6, CELL + 6, 13)
         ctx.stroke()
@@ -178,8 +171,8 @@ function drawMonth(ctx: CanvasRenderingContext2D, calendar: FaceCalendar): void 
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
       ctx.font = `600 20px ${SANS}`
-      // 밝은 칸 위에서는 어두운 글씨라야 읽힌다
-      ctx.fillStyle = level >= 3 ? '#05130c' : level === 0 ? MUTED : TEXT
+      // 칸 색에 따라 읽히는 글자색이 다르다. 테마마다 뒤집힌다.
+      ctx.fillStyle = palette.levelText[level] ?? palette.text
       ctx.fillText(String(Number(date.slice(8))), x + CELL / 2, y + CELL / 2 + 1)
     })
   })
@@ -187,7 +180,7 @@ function drawMonth(ctx: CanvasRenderingContext2D, calendar: FaceCalendar): void 
   ctx.textAlign = 'left'
   ctx.textBaseline = 'alphabetic'
   ctx.font = `700 42px ${SANS}`
-  ctx.fillStyle = calendar.streak > 0 ? ACCENT : MUTED
+  ctx.fillStyle = calendar.streak > 0 ? palette.accent : palette.muted
 
   const streakLabel = calendar.streak > 0 ? `연속 ${calendar.streak}일` : '연속 기록 없음'
   const fire = calendar.streak >= STREAK_FIRE_FROM ? '🔥 ' : ''
@@ -195,10 +188,12 @@ function drawMonth(ctx: CanvasRenderingContext2D, calendar: FaceCalendar): void 
 }
 
 export function drawFace(ctx: CanvasRenderingContext2D, view: FaceView): void {
+  const palette = paletteOf(view.theme)
+
   ctx.save()
   ctx.clearRect(0, 0, FACE_WIDTH, FACE_HEIGHT)
 
-  ctx.fillStyle = BG
+  ctx.fillStyle = palette.bg
   ctx.fillRect(0, 0, FACE_WIDTH, FACE_HEIGHT)
 
   const hasBackground = Boolean(view.background?.complete && view.background.naturalWidth > 0)
@@ -206,7 +201,7 @@ export function drawFace(ctx: CanvasRenderingContext2D, view: FaceView): void {
   if (hasBackground && view.background) {
     drawCover(ctx, view.background)
     // 어떤 사진을 올려도 시간이 읽히도록 덮는다 (PRD 4.4)
-    ctx.fillStyle = SCRIM
+    ctx.fillStyle = palette.scrim
     ctx.fillRect(0, 0, FACE_WIDTH, FACE_HEIGHT)
   } else {
     const glow = ctx.createRadialGradient(
@@ -217,7 +212,7 @@ export function drawFace(ctx: CanvasRenderingContext2D, view: FaceView): void {
       FACE_HEIGHT / 2,
       FACE_WIDTH * 0.55,
     )
-    glow.addColorStop(0, 'rgba(0, 196, 113, 0.10)')
+    glow.addColorStop(0, palette.glow)
     glow.addColorStop(1, 'rgba(0, 0, 0, 0)')
     ctx.fillStyle = glow
     ctx.fillRect(0, 0, FACE_WIDTH, FACE_HEIGHT)
@@ -226,7 +221,7 @@ export function drawFace(ctx: CanvasRenderingContext2D, view: FaceView): void {
   // 사진 위에서는 흐린 색 글자가 묻힌다. 스크림을 더 어둡게 하면 사진이 죽으므로
   // 글자에만 그림자를 넣는다. 배경이 없을 때는 필요 없다.
   if (hasBackground) {
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.85)'
+    ctx.shadowColor = palette.shadow
     ctx.shadowBlur = 16
     ctx.shadowOffsetY = 2
   }
@@ -235,14 +230,14 @@ export function drawFace(ctx: CanvasRenderingContext2D, view: FaceView): void {
   if (view.nickname) {
     ctx.textAlign = 'left'
     ctx.textBaseline = 'top'
-    ctx.fillStyle = TEXT
+    ctx.fillStyle = palette.text
     fitText(ctx, view.nickname, `600 46px ${SANS}`, LEFT_WIDTH, PADDING, PADDING)
   }
 
   // 날짜 (우상단)
   ctx.textAlign = 'right'
   ctx.textBaseline = 'top'
-  ctx.fillStyle = DIM
+  ctx.fillStyle = palette.dim
   fitText(
     ctx,
     formatDate(view.now),
@@ -252,21 +247,23 @@ export function drawFace(ctx: CanvasRenderingContext2D, view: FaceView): void {
     PADDING + 8,
   )
 
-  drawClock(ctx, view)
+  drawClock(ctx, view, palette)
 
   if (view.paused) {
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
     ctx.font = `600 30px ${SANS}`
-    ctx.fillStyle = MUTED
+    ctx.fillStyle = palette.muted
     ctx.fillText('일시정지', LEFT_CENTER, 552)
   }
 
   // 강의 정보 (왼쪽 아래) — 있는 줄만 아래에서부터 쌓는다
   const lines: Array<{ text: string; font: string; color: string }> = []
-  if (view.courseName) lines.push({ text: view.courseName, font: `600 48px ${SANS}`, color: TEXT })
+  if (view.courseName) {
+    lines.push({ text: view.courseName, font: `600 48px ${SANS}`, color: palette.text })
+  }
   if (view.instructorName) {
-    lines.push({ text: view.instructorName, font: `500 34px ${SANS}`, color: DIM })
+    lines.push({ text: view.instructorName, font: `500 34px ${SANS}`, color: palette.dim })
   }
 
   ctx.textAlign = 'center'
@@ -278,7 +275,7 @@ export function drawFace(ctx: CanvasRenderingContext2D, view: FaceView): void {
     y -= 64
   }
 
-  if (view.calendar) drawMonth(ctx, view.calendar)
+  if (view.calendar) drawMonth(ctx, view.calendar, palette)
 
   ctx.restore()
 }

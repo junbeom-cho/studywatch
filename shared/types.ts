@@ -15,6 +15,8 @@ export interface SessionSnapshot {
   pauses: PauseSpan[]
 }
 
+export type Theme = 'dark' | 'light'
+
 export interface Settings {
   nickname: string
   courseName: string
@@ -26,6 +28,7 @@ export interface Settings {
   soundEnabled: boolean
   /** 배경으로 쓸 이미지. null 이면 기본 배경. */
   backgroundId: number | null
+  theme: Theme
 }
 
 export interface ScreenshotMeta {

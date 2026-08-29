@@ -7,7 +7,42 @@
   --accent: #00c471;
   --accent-strong: #00a760;
   --warn: #ffb86b;
+  --cell: #171b25;
+  --on-accent: #05130c;
   color-scheme: dark;
+}
+
+/* 라이트 테마. 인프런이 라이트 사이트라 중립색은 인프런이 쓰는 회색 계열을 따른다. */
+:root[data-theme='light'] {
+  --bg: #f8f9fa;
+  --surface: #ffffff;
+  --border: #dee2e6;
+  --text: #212529;
+  --dim: #868e96;
+  --accent: #00a760;
+  --accent-strong: #00894f;
+  --warn: #e8590c;
+  --cell: #e9ecef;
+  --on-accent: #ffffff;
+  color-scheme: light;
+}
+
+/* 잔디는 밝은 바탕에서 연한 초록부터 시작해 진해진다 */
+:root[data-theme='light'] .day--1 {
+  background: #bff0db;
+  color: #0b4a30;
+}
+:root[data-theme='light'] .day--2 {
+  background: #73dfb1;
+  color: #08331f;
+}
+:root[data-theme='light'] .day--3 {
+  background: #26cd86;
+  color: var(--on-accent);
+}
+:root[data-theme='light'] .day--4 {
+  background: #00a760;
+  color: #ffffff;
 }
 
 * {
@@ -74,7 +109,7 @@ body {
 .btn--primary {
   background: var(--accent);
   border-color: var(--accent);
-  color: #05130c;
+  color: var(--on-accent);
 }
 
 .btn--ghost {
@@ -354,7 +389,7 @@ body {
   gap: 2px;
   font: inherit;
   color: var(--dim);
-  background: #171b25;
+  background: var(--cell);
   border: 1px solid transparent;
   border-radius: 10px;
   cursor: pointer;
@@ -375,11 +410,11 @@ body {
 }
 .day--3 {
   background: #00a760;
-  color: #05130c;
+  color: var(--on-accent);
 }
 .day--4 {
   background: #00c471;
-  color: #05130c;
+  color: var(--on-accent);
 }
 
 .day--today {
@@ -472,12 +507,12 @@ body {
 }
 
 .tab--on {
-  color: #05130c;
+  color: var(--on-accent);
   background: var(--accent);
 }
 
 .tab--on:hover {
-  color: #05130c;
+  color: var(--on-accent);
   background: var(--accent);
 }
 
@@ -500,4 +535,16 @@ body {
   .tab__dot {
     animation: none;
   }
+}
+
+.tab--icon {
+  flex: 0 0 auto;
+  padding: 12px 14px;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.tab--icon .icon {
+  margin: 0;
 }

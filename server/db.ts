@@ -21,7 +21,8 @@ db.exec(`
     goal_ms         INTEGER,
     interval_ms     INTEGER,
     sound_enabled   INTEGER NOT NULL DEFAULT 1,
-    background_id   INTEGER
+    background_id   INTEGER,
+    theme           TEXT NOT NULL DEFAULT 'dark'
   );
 
   CREATE TABLE IF NOT EXISTS session (
@@ -73,6 +74,7 @@ addColumn('settings', 'goal_ms', 'INTEGER')
 addColumn('settings', 'interval_ms', 'INTEGER')
 addColumn('settings', 'sound_enabled', 'INTEGER NOT NULL DEFAULT 1')
 addColumn('settings', 'background_id', 'INTEGER')
+addColumn('settings', 'theme', "TEXT NOT NULL DEFAULT 'dark'")
 
 // 설정은 항상 한 행만 존재한다.
 db.prepare('INSERT OR IGNORE INTO settings (id) VALUES (1)').run()

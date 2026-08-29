@@ -84,6 +84,13 @@ app.put('/api/settings', async (c) => {
     patch.backgroundId = value
   }
 
+  if (body.theme !== undefined) {
+    if (body.theme !== 'dark' && body.theme !== 'light') {
+      return c.json({ error: "theme 은 'dark' 또는 'light' 여야 한다" }, 400)
+    }
+    patch.theme = body.theme
+  }
+
   if (body.soundEnabled !== undefined) {
     if (typeof body.soundEnabled !== 'boolean') {
       return c.json({ error: 'soundEnabled 는 참/거짓이어야 한다' }, 400)

@@ -51,6 +51,7 @@ export function WatchCanvas({ state, serverNow, canvasRef, background, calendar 
         paused: session?.state === 'paused',
         background,
         calendar,
+        theme: state.settings.theme,
       })
 
       frame = host.requestAnimationFrame(render)
