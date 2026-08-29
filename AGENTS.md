@@ -45,7 +45,8 @@ studywatch/
 |---|---|---|
 | 의존성 설치 | `npm install` | ✅ |
 | 로컬 실행 (개발) | `npm run dev` | ✅ |
-| 로컬 실행 (컨테이너) | `docker compose up --build` | ✅ |
+| 로컬 실행 (컨테이너) | `docker compose -f docker-compose.yaml -f docker-compose.build.yaml up -d --build` | ✅ |
+| 홈서버 실행 | `docker compose up -d` | ⬜ |
 | 전체 테스트 | `npm test` | ✅ |
 | 단일 테스트 | `npx tsx --test shared/time.test.ts` | ✅ |
 | 포맷 적용 | `npm run format` | ✅ |
@@ -57,6 +58,11 @@ studywatch/
 
 `npm run dev` 는 API(3000)와 Vite(5173)를 함께 띄운다. **브라우저는 5173 으로 연다** — Vite 가 `/api` 를 3000 으로 넘긴다.
 빌드된 프론트가 있으면 서버가 3000 한 포트에서 API 와 정적 파일을 함께 서빙한다. 컨테이너가 하나인 이유다.
+
+`docker-compose.yaml` 은 **레지스트리 이미지를 받아 쓴다**. 홈서버는 이 파일 하나만 두고 `docker compose up -d` 로 끝난다.
+소스에서 직접 빌드해 보려면 `docker-compose.build.yaml` 을 겹쳐 쓴다(위 표의 컨테이너 행).
+main 에 push 하면 `.github/workflows/publish.yaml` 이 `ghcr.io/junbeom-cho/studywatch:latest` 를 갱신한다.
+이미지 이름은 레포 이름과 분리해 두었으므로 레포를 rename 해도 홈서버 설정을 고칠 필요가 없다.
 
 최초 1회 셋업. 훅은 `.git/` 안에 설치되어 커밋에 따라오지 않으므로 **클론한 레포마다 한 번씩** 필요하다.
 

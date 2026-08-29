@@ -1,13 +1,17 @@
+# 홈서버는 이 파일 하나만 있으면 된다. `docker compose up -d`
+# 소스에서 직접 빌드하려면 docker-compose.build.yaml 을 겹쳐 쓴다.
 services:
   studywatch:
-    build: .
+    image: ghcr.io/junbeom-cho/studywatch:latest
     container_name: studywatch
     restart: unless-stopped
+    # up 할 때마다 새 latest 를 확인한다
+    pull_policy: always
     ports:
       # Tailscale 로 붙으므로 공개 인터넷에 열지 않는다 (PRD NG-2)
       - '3000:3000'
     environment:
-      # 04:00 학습일 경계가 이 타임존을 기준으로 계산된다
+      # 학습일이 이 타임존 기준으로 정해진다
       TZ: Asia/Seoul
       DATA_DIR: /data
     volumes:
