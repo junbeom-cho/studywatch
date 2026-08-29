@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { api } from './api'
+import { Calendar } from './Calendar'
 import { DiscardButton } from './DiscardButton'
 import { SettingsPanel } from './SettingsPanel'
 import { WatchCanvas } from './WatchCanvas'
@@ -96,6 +97,8 @@ export default function App() {
       </div>
 
       {notice && <p className="notice notice--small">{notice}</p>}
+
+      <Calendar sessionKey={session ? String(session.id) : 'idle'} />
 
       <SettingsPanel
         settings={state.settings}

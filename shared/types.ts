@@ -32,6 +32,15 @@ export interface ScreenshotMeta {
   byteSize: number
 }
 
+export interface CalendarData {
+  /** 오늘의 학습일. 자정이 아니라 세션 시작일 기준이므로 서버가 정해서 내려준다. */
+  today: string
+  from: string
+  to: string
+  /** 기록이 있는 날만 담긴다. 없는 날은 0 으로 본다. */
+  totals: Record<string, number>
+}
+
 export interface AppState {
   /** 응답을 만든 시각. 클라이언트는 이걸로 자기 시계와의 오차를 보정한다. */
   serverNow: number

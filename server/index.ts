@@ -2,11 +2,13 @@ import { serve } from '@hono/node-server'
 import { serveStatic } from '@hono/node-server/serve-static'
 import { Hono } from 'hono'
 import { existsSync, readFileSync } from 'node:fs'
+import { shiftStudyDate, studyDateOf } from '../shared/time'
 import { resolve } from 'node:path'
 import { db } from './db'
 import {
   discardSession,
   flush,
+  studyTotals,
   pauseSession,
   resumeSession,
   snapshot,
@@ -24,6 +26,8 @@ const MAX_FIELD_LENGTH = 200
 /** 하루보다 긴 목표나 간격은 오타로 본다. */
 const MAX_DURATION_MS = 24 * 60 * 60 * 1000
 const MAX_SCREENSHOT_BYTES = 8 * 1024 * 1024
+const CALENDAR_DAYS = 182
+const MAX_CALENDAR_DAYS = 366
 
 const app = new Hono()
 
@@ -87,6 +91,21 @@ app.post('/api/session/:action', (c) => {
   const now = Date.now()
   run(now)
   return c.json(snapshot(now))
+})
+
+app.get('/api/calendar', (c) => {
+  const now = Date.now()
+  // 진행 중인 세션을 먼저 반영해야 오늘 칸이 최신이다
+  flush(now)
+
+  const requested = Number(c.req.query('days') ?? CALENDAR_DAYS)
+  const days = Number.isInteger(requested)
+    ? Math.min(Math.max(requested, 1), MAX_CALENDAR_DAYS)
+    : CALENDAR_DAYS
+
+  const today = studyDateOf(now)
+  const from = shiftStudyDate(today, -(days - 1))
+  return c.json({ today, from, to: today, totals: studyTotals(from, today) })
 })
 
 app.post('/api/screenshots', async (c) => {

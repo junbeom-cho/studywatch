@@ -161,6 +161,17 @@ export function discardSession(now: number): void {
   recomputeDate(date, now)
 }
 
+/** from~to (포함) 사이에 기록이 있는 날만 돌려준다. 없는 날까지 채우는 건 화면 쪽 일이다. */
+export function studyTotals(from: string, to: string): Record<string, number> {
+  const rows = db
+    .prepare(
+      'SELECT study_date, total_ms FROM daily_study WHERE study_date BETWEEN ? AND ? AND total_ms > 0',
+    )
+    .all(from, to) as Array<{ study_date: string; total_ms: number }>
+
+  return Object.fromEntries(rows.map((row) => [row.study_date, row.total_ms]))
+}
+
 export function snapshot(now: number): AppState {
   return { serverNow: now, session: currentSession(), settings: readSettings() }
 }

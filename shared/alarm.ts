@@ -1,3 +1,5 @@
+import { formatDuration } from './time'
+
 export type AlarmKind = 'goal' | 'interval'
 
 export interface Alarm {
@@ -12,17 +14,8 @@ export interface Alarm {
  * 무엇이 울렸는지 기억하지 않고 매번 "지금 다음"을 계산한다. 그래서 새로고침하거나
  * 다른 기기에서 열어도 이미 지난 알림이 다시 울리지 않는다.
  */
-/** 30분 → "30분", 90분 → "1시간 30분", 120분 → "2시간" */
-function humanize(ms: number): string {
-  const minutes = Math.round(ms / 60_000)
-  if (minutes < 60) return `${minutes}분`
-  const hours = Math.floor(minutes / 60)
-  const rest = minutes % 60
-  return rest === 0 ? `${hours}시간` : `${hours}시간 ${rest}분`
-}
-
 export function messageFor(kind: AlarmKind, atMs: number): string {
-  return kind === 'goal' ? `목표 ${humanize(atMs)} 달성` : `${humanize(atMs)} 경과`
+  return kind === 'goal' ? `목표 ${formatDuration(atMs)} 달성` : `${formatDuration(atMs)} 경과`
 }
 
 export function nextAlarm(

@@ -67,3 +67,37 @@ export function studyDateOf(startedAt: number): string {
   const d = new Date(startedAt)
   return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`
 }
+
+/** date 에서 days 만큼 떨어진 학습일. 음수면 과거. */
+export function shiftStudyDate(date: string, days: number): string {
+  const parts = date.split('-')
+  const shifted = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]) + days)
+  return studyDateOf(shifted.getTime())
+}
+
+/** from 부터 to 까지(양끝 포함)의 학습일을 순서대로. 달력 격자를 채울 때 쓴다. */
+export function studyDateRange(from: string, to: string): string[] {
+  const dates: string[] = []
+  let cursor = from
+  while (cursor <= to) {
+    dates.push(cursor)
+    cursor = shiftStudyDate(cursor, 1)
+    if (dates.length > 1000) break // 방어: 인자가 뒤집혀 들어와도 무한 루프에 빠지지 않게
+  }
+  return dates
+}
+
+/** 요일 번호 (0=일). 달력 격자에서 세로 위치를 정한다. */
+export function weekdayOf(date: string): number {
+  const parts = date.split('-')
+  return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])).getDay()
+}
+
+/** 사람이 읽는 길이. 30분 → "30분", 90분 → "1시간 30분", 120분 → "2시간" */
+export function formatDuration(ms: number): string {
+  const minutes = Math.round(Math.max(0, ms) / 60_000)
+  if (minutes < 60) return `${minutes}분`
+  const hours = Math.floor(minutes / 60)
+  const rest = minutes % 60
+  return rest === 0 ? `${hours}시간` : `${hours}시간 ${rest}분`
+}
