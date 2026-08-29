@@ -1,11 +1,13 @@
 import { useRef } from 'react'
 import type { AppState } from '../../shared/types'
 import { WatchCanvas } from './WatchCanvas'
+import type { FaceCalendar } from './face'
 
 interface Props {
   state: AppState
   serverNow: () => number
   background: HTMLImageElement | null
+  calendar: FaceCalendar | null
   offline: boolean
   onStart: () => void
   onPause: () => void
@@ -21,6 +23,7 @@ export function PipView({
   state,
   serverNow,
   background,
+  calendar,
   offline,
   onStart,
   onPause,
@@ -37,6 +40,7 @@ export function PipView({
         serverNow={serverNow}
         canvasRef={canvasRef}
         background={background}
+        calendar={calendar}
       />
 
       <div className="controls controls--pip">

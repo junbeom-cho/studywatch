@@ -1,89 +1,139 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { formatDuration } from '../../shared/time'
-import type { CalendarData } from '../../shared/types'
-import { describe, streakOf, weeksOf } from './calendarGrid'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { currentMonth, monthGrid, shiftMonth } from '../../shared/month'
+import { formatDuration, studyDateOf } from '../../shared/time'
+import type { CalendarData, ScreenshotMeta } from '../../shared/types'
+import { levelOf } from './calendarGrid'
 
-const REFRESH_MS = 60_000
-const WEEKDAY_LABELS = ['', '월', '', '수', '', '금', '']
+interface Props {
+  calendar: CalendarData | null
+  /** 스크린샷을 찍을 때마다 바뀐다. 목록을 다시 읽는 신호. */
+  shotKey: number
+}
 
-export function Calendar({ sessionKey }: { sessionKey: string }) {
-  const [data, setData] = useState<CalendarData | null>(null)
-  const scroll = useRef<HTMLDivElement>(null)
+const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
+
+export function Calendar({ calendar, shotKey }: Props) {
+  const [view, setView] = useState(() => currentMonth(Date.now()))
+  const [picked, setPicked] = useState<string | null>(null)
+  const [shots, setShots] = useState<ScreenshotMeta[]>([])
 
   const load = useCallback(async () => {
     try {
-      const response = await fetch('/api/calendar')
-      if (response.ok) setData((await response.json()) as CalendarData)
+      const response = await fetch('/api/screenshots')
+      if (response.ok) setShots((await response.json()) as ScreenshotMeta[])
     } catch {
-      // 달력이 없다고 스톱워치가 멈추지는 않는다. 다음 갱신에서 다시 시도한다.
+      // 스크린샷 목록을 못 읽어도 달력은 그대로 보인다
     }
   }, [])
 
-  // 세션이 시작·종료될 때마다 다시 부른다. 정지 직후 오늘 칸이 바로 채워지도록.
   useEffect(() => {
     void load()
-    const timer = setInterval(() => void load(), REFRESH_MS)
-    return () => clearInterval(timer)
-  }, [load, sessionKey])
+  }, [load, shotKey])
 
-  // 좁은 화면에서는 반년치가 다 안 들어간다. 오늘이 보이는 오른쪽 끝에서 시작한다.
-  useEffect(() => {
-    const element = scroll.current
-    if (element) element.scrollLeft = element.scrollWidth
-  }, [data])
+  /** 날짜별 스크린샷. 찍은 시각의 날짜로 묶는다. */
+  const byDate = useMemo(() => {
+    const grouped = new Map<string, ScreenshotMeta[]>()
+    for (const shot of shots) {
+      const date = studyDateOf(shot.takenAt)
+      const list = grouped.get(date)
+      if (list) list.push(shot)
+      else grouped.set(date, [shot])
+    }
+    return grouped
+  }, [shots])
 
-  if (!data) return null
+  if (!calendar) return null
 
-  const weeks = weeksOf(data.from, data.to, data.totals)
-  const todayMs = data.totals[data.today] ?? 0
-  const streak = streakOf(data.today, data.totals)
+  const grid = monthGrid(view.year, view.month)
+  const totals = calendar.totals
+  const pickedShots = picked ? (byDate.get(picked) ?? []) : []
+  const monthTotal = grid.weeks
+    .flat()
+    .reduce((sum, date) => sum + (date ? (totals[date] ?? 0) : 0), 0)
+
+  const move = (offset: number) => {
+    setView(shiftMonth(view.year, view.month, offset))
+    setPicked(null)
+  }
 
   return (
-    <section className="calendar">
-      <header className="calendar__head">
-        <span>
-          오늘 <strong>{formatDuration(todayMs)}</strong>
-        </span>
-        <span className="calendar__streak">
-          {streak > 0 ? `연속 ${streak}일` : '연속 기록 없음'}
-        </span>
+    <section className="month">
+      <header className="month__head">
+        <button type="button" className="month__nav" onClick={() => move(-1)} title="이전 달">
+          ‹
+        </button>
+        <div className="month__title">
+          <strong>{grid.label}</strong>
+          <span className="month__total">{formatDuration(monthTotal)}</span>
+        </div>
+        <button type="button" className="month__nav" onClick={() => move(1)} title="다음 달">
+          ›
+        </button>
       </header>
 
-      <div className="calendar__body">
-        {/* 라벨은 스크롤과 함께 밀리면 안 되므로 바깥에 둔다 */}
-        <div className="calendar__labels">
-          {WEEKDAY_LABELS.map((label, index) => (
-            <span key={index} className="calendar__label">
-              {label}
-            </span>
-          ))}
-        </div>
-
-        <div className="calendar__scroll" ref={scroll}>
-          <div className="calendar__grid">
-            {weeks.map((week, weekIndex) => (
-              <div key={weekIndex} className="calendar__week">
-                {week.map((cell, dayIndex) =>
-                  cell ? (
-                    <span
-                      key={cell.date}
-                      className={`calendar__cell calendar__cell--${cell.level}${
-                        cell.date === data.today ? ' calendar__cell--today' : ''
-                      }`}
-                      title={describe(cell)}
-                    />
-                  ) : (
-                    <span
-                      key={`empty-${dayIndex}`}
-                      className="calendar__cell calendar__cell--void"
-                    />
-                  ),
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
+      <div className="month__weekdays">
+        {WEEKDAYS.map((label) => (
+          <span key={label} className="month__weekday">
+            {label}
+          </span>
+        ))}
       </div>
+
+      <div className="month__grid">
+        {grid.weeks.flat().map((date, index) => {
+          if (!date) return <span key={`empty-${index}`} className="day day--void" />
+
+          const total = totals[date] ?? 0
+          const shotCount = byDate.get(date)?.length ?? 0
+          const classes = [
+            'day',
+            `day--${levelOf(total)}`,
+            date === calendar.today ? 'day--today' : '',
+            date === picked ? 'day--picked' : '',
+          ]
+            .filter(Boolean)
+            .join(' ')
+
+          return (
+            <button
+              key={date}
+              type="button"
+              className={classes}
+              onClick={() => setPicked(date === picked ? null : date)}
+              title={`${date} · ${total > 0 ? formatDuration(total) : '기록 없음'}`}
+            >
+              <span className="day__number">{Number(date.slice(8))}</span>
+              {total > 0 && <span className="day__time">{formatDuration(total)}</span>}
+              {shotCount > 0 && <span className="day__dot" />}
+            </button>
+          )
+        })}
+      </div>
+
+      {picked && (
+        <div className="shots">
+          <span className="field__label">
+            {picked} · {formatDuration(totals[picked] ?? 0)}
+            {pickedShots.length > 0 ? ` · 스크린샷 ${pickedShots.length}장` : ' · 스크린샷 없음'}
+          </span>
+          {pickedShots.length > 0 && (
+            <div className="shots__list">
+              {pickedShots.map((shot) => (
+                <a
+                  key={shot.id}
+                  className="shots__item"
+                  href={`/api/screenshots/${shot.id}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  title="새 탭에서 크게 보기"
+                >
+                  <img src={`/api/screenshots/${shot.id}`} alt="" loading="lazy" />
+                </a>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </section>
   )
 }

@@ -1,7 +1,7 @@
 import { useEffect, useRef, type RefObject } from 'react'
 import { elapsedMs } from '../../shared/time'
 import type { AppState } from '../../shared/types'
-import { FACE_HEIGHT, FACE_WIDTH, drawFace } from './face'
+import { FACE_HEIGHT, FACE_WIDTH, drawFace, type FaceCalendar } from './face'
 
 interface Props {
   state: AppState
@@ -9,14 +9,15 @@ interface Props {
   /** 스크린샷(FR-2)이 같은 캔버스를 써야 해서 소유권을 위로 올렸다 */
   canvasRef: RefObject<HTMLCanvasElement | null>
   background: HTMLImageElement | null
+  calendar: FaceCalendar | null
 }
 
 const MAX_DPR = 3
 
-export function WatchCanvas({ state, serverNow, canvasRef, background }: Props) {
+export function WatchCanvas({ state, serverNow, canvasRef, background, calendar }: Props) {
   // rAF 루프는 한 번만 만들고, 최신 값은 ref 로 읽는다
-  const latest = useRef({ state, serverNow, background })
-  latest.current = { state, serverNow, background }
+  const latest = useRef({ state, serverNow, background, calendar })
+  latest.current = { state, serverNow, background, calendar }
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -29,7 +30,7 @@ export function WatchCanvas({ state, serverNow, canvasRef, background }: Props) 
 
     let frame = 0
     const render = () => {
-      const { state, serverNow, background } = latest.current
+      const { state, serverNow, background, calendar } = latest.current
       const dpr = Math.min(host.devicePixelRatio || 1, MAX_DPR)
       const width = Math.round(FACE_WIDTH * dpr)
       const height = Math.round(FACE_HEIGHT * dpr)
@@ -49,12 +50,15 @@ export function WatchCanvas({ state, serverNow, canvasRef, background }: Props) 
         now,
         paused: session?.state === 'paused',
         background,
+        calendar,
       })
 
       frame = host.requestAnimationFrame(render)
     }
 
-    frame = host.requestAnimationFrame(render)
+    // 첫 프레임을 기다리지 않고 바로 한 번 그린다. 로드 직후 스크린샷을 찍으면
+    // 아직 아무것도 안 그려진 빈 캔버스가 저장된다.
+    render()
     return () => host.cancelAnimationFrame(frame)
   }, [canvasRef])
 
