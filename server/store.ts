@@ -1,5 +1,5 @@
 import { db } from './db'
-import { activeSpans, studyDatesBetween, studyDayRange } from '../shared/time'
+import { elapsedMs, studyDateOf } from '../shared/time'
 import type { AppState, PauseSpan, SessionSnapshot, Settings } from '../shared/types'
 
 interface SessionRow {
@@ -68,42 +68,30 @@ export function writeSettings(patch: Partial<Settings>): Settings {
 }
 
 /**
- * 해당 학습일들의 누적 시간을 원본(session + pause_span)에서 다시 계산한다.
+ * 해당 학습일의 누적 시간을 원본(session + pause_span)에서 다시 계산한다.
  * daily_study 는 파생 데이터라 몇 번을 돌려도 같은 값이 나온다. (PRD 5.2)
  */
-export function recomputeDates(dates: string[], now: number): void {
-  if (dates.length === 0) return
+export function recomputeDate(date: string, now: number): void {
   const sessions = db.prepare('SELECT * FROM session').all() as SessionRow[]
-  const upsert = db.prepare(`
+  let total = 0
+
+  for (const session of sessions) {
+    // 세션은 쪼개지 않는다. 시작한 날에 통째로 붙는다.
+    if (studyDateOf(session.started_at) !== date) continue
+    total += elapsedMs(session.started_at, pausesOf(session.id), session.stopped_at ?? now)
+  }
+
+  db.prepare(`
     INSERT INTO daily_study (study_date, total_ms) VALUES (?, ?)
     ON CONFLICT(study_date) DO UPDATE SET total_ms = excluded.total_ms
-  `)
-
-  const write = db.transaction(() => {
-    for (const date of dates) {
-      const [from, to] = studyDayRange(date)
-      let total = 0
-
-      for (const session of sessions) {
-        const until = session.stopped_at ?? now
-        if (session.started_at >= to || until <= from) continue
-        for (const [spanFrom, spanTo] of activeSpans(session.started_at, pausesOf(session.id), until)) {
-          total += Math.max(0, Math.min(spanTo, to) - Math.max(spanFrom, from))
-        }
-      }
-
-      upsert.run(date, total)
-    }
-  })
-
-  write()
+  `).run(date, total)
 }
 
-/** 진행 중인 세션이 걸쳐 있는 날짜들을 집계에 반영한다. */
+/** 진행 중인 세션을 집계에 반영한다. */
 export function flush(now: number): void {
   const row = liveRow()
   if (!row) return
-  recomputeDates(studyDatesBetween(row.started_at, now), now)
+  recomputeDate(studyDateOf(row.started_at), now)
 }
 
 export function startSession(now: number): void {
@@ -118,7 +106,7 @@ export function pauseSession(now: number): void {
     db.prepare('INSERT INTO pause_span (session_id, paused_at) VALUES (?, ?)').run(row.id, now)
     db.prepare("UPDATE session SET state = 'paused' WHERE id = ?").run(row.id)
   })()
-  recomputeDates(studyDatesBetween(row.started_at, now), now)
+  recomputeDate(studyDateOf(row.started_at), now)
 }
 
 export function resumeSession(now: number): void {
@@ -142,7 +130,7 @@ export function stopSession(now: number): void {
     ).run(now, row.id)
     db.prepare("UPDATE session SET state = 'finished', stopped_at = ? WHERE id = ?").run(now, row.id)
   })()
-  recomputeDates(studyDatesBetween(row.started_at, now), now)
+  recomputeDate(studyDateOf(row.started_at), now)
 }
 
 export function snapshot(now: number): AppState {

@@ -1,45 +1,27 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import {
-  activeSpans,
-  elapsedMs,
-  formatDate,
-  formatElapsed,
-  studyDateOf,
-  studyDatesBetween,
-  studyDayRange,
-} from './time'
+import { activeSpans, elapsedMs, formatDate, formatElapsed, studyDateOf } from './time'
 
 const HOUR = 3_600_000
 const at = (y: number, m: number, d: number, h: number, min = 0) =>
   new Date(y, m - 1, d, h, min).getTime()
 
-describe('학습일 경계 (04:00)', () => {
-  it('새벽 3시 59분은 전날로 친다', () => {
-    assert.equal(studyDateOf(at(2026, 8, 30, 3, 59)), '2026-08-29')
+describe('학습일 귀속', () => {
+  it('세션을 시작한 날에 붙는다', () => {
+    assert.equal(studyDateOf(at(2026, 8, 30, 14, 0)), '2026-08-30')
   })
 
-  it('새벽 4시부터 당일이다', () => {
-    assert.equal(studyDateOf(at(2026, 8, 30, 4, 0)), '2026-08-30')
+  it('자정 직전에 시작하면 시작한 날에 붙는다', () => {
+    // 23:50 에 시작해 다음날 01:00 에 끝나도 전부 8/30 이다
+    assert.equal(studyDateOf(at(2026, 8, 30, 23, 50)), '2026-08-30')
   })
 
-  it('자정을 넘겨도 04시 전이면 아직 전날이다', () => {
-    assert.equal(studyDateOf(at(2026, 8, 31, 0, 10)), '2026-08-30')
+  it('자정을 넘겨 시작하면 새 날에 붙는다', () => {
+    assert.equal(studyDateOf(at(2026, 8, 31, 0, 30)), '2026-08-31')
   })
 
-  it('하루의 구간은 04:00 부터 다음날 04:00 까지다', () => {
-    assert.deepEqual(studyDayRange('2026-08-30'), [at(2026, 8, 30, 4), at(2026, 8, 31, 4)])
-  })
-
-  it('23시에 시작해 새벽 1시에 끝나면 학습일 하나에만 걸린다', () => {
-    assert.deepEqual(studyDatesBetween(at(2026, 8, 30, 23), at(2026, 8, 31, 1)), ['2026-08-30'])
-  })
-
-  it('23시에 시작해 새벽 5시에 끝나면 학습일 둘에 걸친다', () => {
-    assert.deepEqual(studyDatesBetween(at(2026, 8, 30, 23), at(2026, 8, 31, 5)), [
-      '2026-08-30',
-      '2026-08-31',
-    ])
+  it('새벽에 시작해도 시작한 날이 기준이다', () => {
+    assert.equal(studyDateOf(at(2026, 8, 31, 3, 0)), '2026-08-31')
   })
 })
 

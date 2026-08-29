@@ -1,10 +1,12 @@
 import type { PauseSpan } from './types'
 
-/** 하루의 경계. 새벽 4시 이전의 공부는 전날 기록으로 친다. (PRD 4.7) */
-export const DAY_START_HOUR = 4
+/**
+ * 학습일은 세션을 **시작한** 시각의 날짜다. 자정을 넘겨도 세션을 쪼개지 않는다.
+ * 23:50 에 시작해 01:00 에 끝냈으면 전부 시작한 날에 붙고,
+ * 00:30 에 시작했으면 시작한 날이 이미 새 날이므로 그날에 붙는다.
+ */
 
 const HOUR_MS = 3_600_000
-const DAY_MS = 86_400_000
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'] as const
 
 const pad2 = (n: number) => String(n).padStart(2, '0')
@@ -57,34 +59,11 @@ export function formatDate(ts: number): string {
   return `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일 (${WEEKDAYS[d.getDay()]})`
 }
 
-/** 그 시각이 속한 학습일(YYYY-MM-DD). 04:00 경계 적용. */
-export function studyDateOf(ts: number): string {
-  const d = new Date(ts - DAY_START_HOUR * HOUR_MS)
+/**
+ * 세션이 기록될 학습일(YYYY-MM-DD).
+ * 반드시 세션의 **시작 시각**을 넘긴다. 종료 시각을 넘기면 날짜가 어긋난다.
+ */
+export function studyDateOf(startedAt: number): string {
+  const d = new Date(startedAt)
   return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`
-}
-
-/** 학습일 하루의 실제 구간 [04:00, 다음날 04:00) */
-export function studyDayRange(date: string): [number, number] {
-  const parts = date.split('-')
-  const year = Number(parts[0])
-  const month = Number(parts[1])
-  const day = Number(parts[2])
-  const from = new Date(year, month - 1, day, DAY_START_HOUR).getTime()
-  const to = new Date(year, month - 1, day + 1, DAY_START_HOUR).getTime()
-  return [from, to]
-}
-
-/** from~to 가 걸쳐 있는 학습일 목록. 집계를 다시 계산할 날짜를 고를 때 쓴다. */
-export function studyDatesBetween(from: number, to: number): string[] {
-  const dates: string[] = []
-  const last = studyDateOf(Math.max(from, to))
-  let cursor = from
-  for (;;) {
-    const date = studyDateOf(cursor)
-    dates.push(date)
-    if (date === last) return dates
-    cursor += DAY_MS
-    // 방어: 시각이 뒤집혀 들어와도 무한 루프에 빠지지 않게
-    if (dates.length > 400) return dates
-  }
 }
