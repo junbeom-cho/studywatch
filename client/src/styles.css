@@ -344,3 +344,28 @@ body {
   border-radius: 6px;
   cursor: pointer;
 }
+
+/* PIP 창은 작다. 여백을 줄이고 버튼만 남긴다. */
+.pip-body {
+  padding: 10px;
+}
+
+.pip {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pip .face {
+  border-radius: 10px;
+}
+
+.controls--pip .btn {
+  flex: 1 1 auto;
+  padding: 12px 10px;
+  font-size: 15px;
+}
+
+.controls--pip .btn--ghost {
+  flex: 0 0 90px;
+}

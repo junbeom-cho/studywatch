@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { api } from './api'
 import { BackgroundPanel } from './BackgroundPanel'
 import { Calendar } from './Calendar'
 import { DiscardButton } from './DiscardButton'
 import { SettingsPanel } from './SettingsPanel'
 import { WatchCanvas } from './WatchCanvas'
+import { PipView } from './PipView'
 import { captureFace } from './screenshot'
+import { pipSupported, usePipWindow } from './usePipWindow'
 import { useBackground } from './useBackground'
 import { useAlarms } from './useAlarms'
 import { useAppState } from './useAppState'
@@ -18,6 +21,7 @@ export default function App() {
 
   useAlarms(state, serverNow)
   const background = useBackground(state?.settings.backgroundId ?? null)
+  const { pip, problem: pipProblem, open: openPip, close: closePip } = usePipWindow()
   const [notice, setNotice] = useState<string | null>(null)
   const [capturing, setCapturing] = useState(false)
 
@@ -102,8 +106,29 @@ export default function App() {
         <button className="btn" disabled={capturing} onClick={() => void capture()}>
           {capturing ? '찍는 중…' : '스크린샷'}
         </button>
+        {pipSupported() && (
+          <button className="btn" onClick={() => (pip ? closePip() : void openPip())}>
+            {pip ? 'PIP 닫기' : 'PIP'}
+          </button>
+        )}
       </div>
 
+      {pip &&
+        createPortal(
+          <PipView
+            state={state}
+            serverNow={serverNow}
+            background={background}
+            offline={offline}
+            onStart={() => void run(api.start)}
+            onPause={() => void run(api.pause)}
+            onResume={() => void run(api.resume)}
+            onStop={() => void run(api.stop)}
+          />,
+          pip.document.body,
+        )}
+
+      {pipProblem && <p className="notice notice--small">{pipProblem}</p>}
       {notice && <p className="notice notice--small">{notice}</p>}
 
       <Calendar sessionKey={session ? String(session.id) : 'idle'} />

@@ -23,10 +23,14 @@ export function WatchCanvas({ state, serverNow, canvasRef, background }: Props) 
     const ctx = canvas?.getContext('2d')
     if (!canvas || !ctx) return
 
+    // PIP 창(FR-3)에 그려질 때는 그 창의 rAF 를 써야 한다. 본 창이 뒤로 가면
+    // 본 창의 rAF 는 멈추기 때문이다. 캔버스가 어느 문서에 있는지에서 유도한다.
+    const host = canvas.ownerDocument.defaultView ?? window
+
     let frame = 0
     const render = () => {
       const { state, serverNow, background } = latest.current
-      const dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR)
+      const dpr = Math.min(host.devicePixelRatio || 1, MAX_DPR)
       const width = Math.round(FACE_WIDTH * dpr)
       const height = Math.round(FACE_HEIGHT * dpr)
       if (canvas.width !== width || canvas.height !== height) {
@@ -47,11 +51,11 @@ export function WatchCanvas({ state, serverNow, canvasRef, background }: Props) 
         background,
       })
 
-      frame = requestAnimationFrame(render)
+      frame = host.requestAnimationFrame(render)
     }
 
-    frame = requestAnimationFrame(render)
-    return () => cancelAnimationFrame(frame)
+    frame = host.requestAnimationFrame(render)
+    return () => host.cancelAnimationFrame(frame)
   }, [canvasRef])
 
   return <canvas ref={canvasRef} className="face" width={FACE_WIDTH} height={FACE_HEIGHT} />
