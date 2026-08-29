@@ -141,3 +141,8 @@ body {
   border-color: #ff8f8f;
   background: color-mix(in srgb, #ff8f8f 12%, var(--surface));
 }
+
+.notice--small {
+  font-size: 14px;
+  text-align: left;
+}

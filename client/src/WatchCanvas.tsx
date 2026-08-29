@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, type RefObject } from 'react'
 import { elapsedMs } from '../../shared/time'
 import type { AppState } from '../../shared/types'
 import { FACE_HEIGHT, FACE_WIDTH, drawFace } from './face'
@@ -6,12 +6,13 @@ import { FACE_HEIGHT, FACE_WIDTH, drawFace } from './face'
 interface Props {
   state: AppState
   serverNow: () => number
+  /** 스크린샷(FR-2)이 같은 캔버스를 써야 해서 소유권을 위로 올렸다 */
+  canvasRef: RefObject<HTMLCanvasElement | null>
 }
 
 const MAX_DPR = 3
 
-export function WatchCanvas({ state, serverNow }: Props) {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
+export function WatchCanvas({ state, serverNow, canvasRef }: Props) {
   // rAF 루프는 한 번만 만들고, 최신 값은 ref 로 읽는다
   const latest = useRef({ state, serverNow })
   latest.current = { state, serverNow }
@@ -49,7 +50,7 @@ export function WatchCanvas({ state, serverNow }: Props) {
 
     frame = requestAnimationFrame(render)
     return () => cancelAnimationFrame(frame)
-  }, [])
+  }, [canvasRef])
 
   return <canvas ref={canvasRef} className="face" width={FACE_WIDTH} height={FACE_HEIGHT} />
 }

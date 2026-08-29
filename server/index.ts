@@ -1,7 +1,7 @@
 import { serve } from '@hono/node-server'
 import { serveStatic } from '@hono/node-server/serve-static'
 import { Hono } from 'hono'
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { db } from './db'
 import {
@@ -14,12 +14,14 @@ import {
   stopSession,
   writeSettings,
 } from './store'
+import { listScreenshots, saveScreenshot, screenshotFile } from './screenshots'
 import type { Settings } from '../shared/types'
 
 const PORT = Number(process.env.PORT ?? 3000)
 const CLIENT_DIR = 'dist/client'
 const FLUSH_INTERVAL_MS = 30_000
 const MAX_FIELD_LENGTH = 200
+const MAX_SCREENSHOT_BYTES = 8 * 1024 * 1024
 
 const app = new Hono()
 
@@ -61,6 +63,27 @@ app.post('/api/session/:action', (c) => {
   const now = Date.now()
   run(now)
   return c.json(snapshot(now))
+})
+
+app.post('/api/screenshots', async (c) => {
+  if (!(c.req.header('content-type') ?? '').startsWith('image/png')) {
+    return c.json({ error: 'PNG 만 받는다' }, 415)
+  }
+
+  const body = await c.req.arrayBuffer()
+  if (body.byteLength === 0) return c.json({ error: '빈 파일이다' }, 400)
+  if (body.byteLength > MAX_SCREENSHOT_BYTES) return c.json({ error: '파일이 너무 크다' }, 413)
+
+  return c.json(saveScreenshot(new Uint8Array(body), Date.now()), 201)
+})
+
+app.get('/api/screenshots', (c) => c.json(listScreenshots()))
+
+app.get('/api/screenshots/:id', (c) => {
+  const id = Number(c.req.param('id'))
+  const file = Number.isInteger(id) ? screenshotFile(id) : null
+  if (!file) return c.json({ error: '없는 스크린샷이다' }, 404)
+  return new Response(readFileSync(file), { headers: { 'content-type': 'image/png' } })
 })
 
 // 빌드된 프론트가 있으면 같은 포트에서 함께 서빙한다. 컨테이너를 하나로 유지하기 위해서다.

@@ -2,8 +2,9 @@ import Database from 'better-sqlite3'
 import { mkdirSync } from 'node:fs'
 import { resolve } from 'node:path'
 
-const dataDir = process.env.DATA_DIR ?? resolve(process.cwd(), 'data')
-mkdirSync(dataDir, { recursive: true })
+export const dataDir = process.env.DATA_DIR ?? resolve(process.cwd(), 'data')
+export const screenshotDir = resolve(dataDir, 'screenshots')
+mkdirSync(screenshotDir, { recursive: true })
 
 export const db = new Database(resolve(dataDir, 'studywatch.db'))
 db.pragma('journal_mode = WAL')
@@ -34,6 +35,13 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS daily_study (
     study_date TEXT PRIMARY KEY,
     total_ms   INTEGER NOT NULL DEFAULT 0
+  );
+
+  CREATE TABLE IF NOT EXISTS screenshot (
+    id        INTEGER PRIMARY KEY AUTOINCREMENT,
+    taken_at  INTEGER NOT NULL,
+    filename  TEXT NOT NULL UNIQUE,
+    byte_size INTEGER NOT NULL
   );
 
   CREATE INDEX IF NOT EXISTS idx_pause_span_session ON pause_span (session_id);

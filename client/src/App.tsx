@@ -1,11 +1,37 @@
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { api } from './api'
 import { DiscardButton } from './DiscardButton'
 import { SettingsPanel } from './SettingsPanel'
 import { WatchCanvas } from './WatchCanvas'
+import { captureFace } from './screenshot'
 import { useAppState } from './useAppState'
+
+const NOTICE_MS = 6000
 
 export default function App() {
   const { state, connection, serverNow, run } = useAppState()
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [notice, setNotice] = useState<string | null>(null)
+  const [capturing, setCapturing] = useState(false)
+
+  useEffect(() => {
+    if (!notice) return
+    const timer = setTimeout(() => setNotice(null), NOTICE_MS)
+    return () => clearTimeout(timer)
+  }, [notice])
+
+  const capture = useCallback(async () => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    setCapturing(true)
+    const { done, failed } = await captureFace(canvas)
+    setCapturing(false)
+
+    const parts: string[] = []
+    if (done.length > 0) parts.push(`${done.join(' · ')} 완료`)
+    if (failed.length > 0) parts.push(`실패 — ${failed.join(', ')}`)
+    setNotice(parts.join('   /   '))
+  }, [])
 
   if (!state) {
     return (
@@ -22,7 +48,7 @@ export default function App() {
 
   return (
     <main className="app">
-      <WatchCanvas state={state} serverNow={serverNow} />
+      <WatchCanvas state={state} serverNow={serverNow} canvasRef={canvasRef} />
 
       {offline && (
         <p className="notice notice--warn">연결 끊김 — 지금 흐르는 시간은 기록되지 않는다.</p>
@@ -59,6 +85,14 @@ export default function App() {
         )}
         {session && <DiscardButton disabled={offline} onConfirm={() => void run(api.discard)} />}
       </div>
+
+      <div className="controls">
+        <button className="btn" disabled={capturing} onClick={() => void capture()}>
+          {capturing ? '찍는 중…' : '스크린샷'}
+        </button>
+      </div>
+
+      {notice && <p className="notice notice--small">{notice}</p>}
 
       <SettingsPanel
         settings={state.settings}

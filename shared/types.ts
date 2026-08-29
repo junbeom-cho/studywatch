@@ -21,6 +21,12 @@ export interface Settings {
   instructorName: string
 }
 
+export interface ScreenshotMeta {
+  id: number
+  takenAt: number
+  byteSize: number
+}
+
 export interface AppState {
   /** 응답을 만든 시각. 클라이언트는 이걸로 자기 시계와의 오차를 보정한다. */
   serverNow: number
