@@ -1,0 +1,43 @@
+# Podman Quadlet 유닛. docker-compose.yaml 대신 쓴다.
+#
+# rootless (권장):
+#   mkdir -p ~/.config/containers/systemd ~/studywatch/data
+#   cp deploy/studywatch.container ~/.config/containers/systemd/
+#   systemctl --user daemon-reload
+#   systemctl --user start studywatch
+#   loginctl enable-linger $USER                     # 로그아웃해도 계속 돈다
+#   systemctl --user enable --now podman-auto-update.timer
+#
+# 이 파일에서 systemd 서비스를 만들어 내므로 systemctl enable 은 하지 않는다.
+# [Install] 을 보고 generator 가 알아서 붙인다. Podman 4.4 이상이 필요하다.
+
+[Unit]
+Description=StudyWatch - 인프런 작심삼일 인증용 스톱워치
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+Image=ghcr.io/junbeom-cho/studywatch:latest
+ContainerName=studywatch
+
+# compose 의 pull_policy: always 에 해당한다.
+# podman-auto-update.timer 가 (기본 하루 한 번) 새 latest 를 받아 다시 띄운다.
+AutoUpdate=registry
+
+# Tailscale 로 붙으므로 공개 인터넷에 열지 않는다 (PRD NG-2)
+PublishPort=3000:3000
+
+# 학습일이 이 타임존 기준으로 정해진다
+Environment=TZ=Asia/Seoul
+Environment=DATA_DIR=/data
+
+# SQLite 파일과 업로드한 이미지가 여기 쌓인다. 백업은 이 디렉터리 복사로 끝난다.
+# :Z 는 SELinux 를 쓰는 배포판(Fedora·RHEL)에서 필요하고, 아닌 곳에서는 무시된다.
+# rootful 로 쓸 때는 %h 가 root 홈이므로 절대 경로로 바꾼다.
+Volume=%h/studywatch/data:/data:Z
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

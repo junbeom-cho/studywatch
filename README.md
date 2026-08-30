@@ -45,6 +45,23 @@ docker compose up -d
 - 데이터는 `./data/studywatch.db` 하나뿐이다. 백업은 이 파일 복사로 끝난다.
 - 학습일이 로컬 시간 기준이므로 compose 의 `TZ` 를 지역에 맞춘다 (기본 `Asia/Seoul`).
 
+### Podman 으로 돌린다면
+
+발행하는 이미지는 OCI 이미지라 Podman 이 그대로 받는다. 따로 만들 것이 없고 compose 대신
+Quadlet 유닛만 쓰면 된다 — [`deploy/studywatch.container`](deploy/studywatch.container) 에 있다.
+
+```bash
+mkdir -p ~/.config/containers/systemd ~/studywatch/data
+cp deploy/studywatch.container ~/.config/containers/systemd/
+systemctl --user daemon-reload
+systemctl --user start studywatch
+```
+
+로그아웃해도 계속 돌게 하려면 `loginctl enable-linger $USER`, `latest` 를 자동으로 따라가려면
+`systemctl --user enable --now podman-auto-update.timer` 를 함께 한다(compose 의 `pull_policy: always` 에 해당).
+
+---
+
 `main` 에 push 하면 [`.github/workflows/publish.yaml`](.github/workflows/publish.yaml) 이 이미지를 다시 올린다. 올리기 전에 `npm run check` 를 돌려 깨진 `latest` 가 홈서버로 내려가지 않게 막는다.
 
 ---
