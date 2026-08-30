@@ -46,7 +46,7 @@ studywatch/
 | 의존성 설치 | `npm install` | ✅ |
 | 로컬 실행 (개발) | `npm run dev` | ✅ |
 | 로컬 실행 (컨테이너) | `docker compose -f docker-compose.yaml -f docker-compose.build.yaml up -d --build` | ✅ |
-| 홈서버 실행 | `docker compose up -d` | ⬜ |
+| 홈서버 실행 | `docker compose up -d` | ✅ |
 | 전체 테스트 | `npm test` | ✅ |
 | 단일 테스트 | `npx tsx --test shared/time.test.ts` | ✅ |
 | 포맷 적용 | `npm run format` | ✅ |
