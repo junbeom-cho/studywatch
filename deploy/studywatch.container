@@ -1,7 +1,7 @@
 # Podman Quadlet 유닛. docker-compose.yaml 대신 쓴다.
 #
 # rootless (권장):
-#   mkdir -p ~/.config/containers/systemd ~/studywatch/data
+#   mkdir -p ~/.config/containers/systemd /home/techbara/studywatch/data
 #   cp deploy/studywatch.container ~/.config/containers/systemd/
 #   systemctl --user daemon-reload
 #   systemctl --user start studywatch
@@ -33,8 +33,10 @@ Environment=DATA_DIR=/data
 
 # SQLite 파일과 업로드한 이미지가 여기 쌓인다. 백업은 이 디렉터리 복사로 끝난다.
 # :Z 는 SELinux 를 쓰는 배포판(Fedora·RHEL)에서 필요하고, 아닌 곳에서는 무시된다.
-# rootful 로 쓸 때는 %h 가 root 홈이므로 절대 경로로 바꾼다.
-Volume=%h/studywatch/data:/data:Z
+#
+# 계정이 다른 곳에서 쓰려면 이 줄만 고친다. %h 를 쓰면 홈 디렉터리로 알아서 바뀌지만
+# (rootless 라면 결과가 같다), 어디에 쌓이는지 눈에 보이는 편이 낫다고 봤다.
+Volume=/home/techbara/studywatch/data:/data:Z
 
 [Service]
 Restart=always

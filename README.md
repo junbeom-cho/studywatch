@@ -51,11 +51,13 @@ docker compose up -d
 Quadlet 유닛만 쓰면 된다 — [`deploy/studywatch.container`](deploy/studywatch.container) 에 있다.
 
 ```bash
-mkdir -p ~/.config/containers/systemd ~/studywatch/data
+mkdir -p ~/.config/containers/systemd /home/techbara/studywatch/data
 cp deploy/studywatch.container ~/.config/containers/systemd/
 systemctl --user daemon-reload
 systemctl --user start studywatch
 ```
+
+데이터 경로는 유닛의 `Volume=` 한 줄이다. 계정이 다르면 그 줄만 고친다.
 
 로그아웃해도 계속 돌게 하려면 `loginctl enable-linger $USER`, `latest` 를 자동으로 따라가려면
 `systemctl --user enable --now podman-auto-update.timer` 를 함께 한다(compose 의 `pull_policy: always` 에 해당).
