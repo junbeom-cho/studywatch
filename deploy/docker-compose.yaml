@@ -9,11 +9,11 @@ services:
     pull_policy: always
     ports:
       # Tailscale 로 붙으므로 공개 인터넷에 열지 않는다 (PRD NG-2)
-      - '3000:3000'
+      - '${PORT:-3000}:3000'
     environment:
       # 학습일이 이 타임존 기준으로 정해진다
-      TZ: Asia/Seoul
+      TZ: ${TZ:-Asia/Seoul}
       DATA_DIR: /data
     volumes:
       # 바인드 마운트라 백업이 data/studywatch.db 복사 한 번으로 끝난다
-      - ./data:/data
+      - ${DATA_DIR:-.}/data:/data
