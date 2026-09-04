@@ -1,6 +1,6 @@
 /**
- * 표시면 캔버스를 PNG 로 만들어 세 곳에 보낸다 — 파일 다운로드 · 클립보드 · 서버.
- * 하나가 실패해도 나머지는 진행한다. (PRD 4.2)
+ * 표시면 캔버스를 PNG 로 만들어 두 곳에 보낸다 — 클립보드 · 서버.
+ * 하나가 실패해도 나머지는 진행한다. 파일로 받고 싶으면 달력에서 골라 내려받는다. (PRD 4.2)
  */
 
 import { FACE_HEIGHT, FACE_WIDTH } from './face'
@@ -10,13 +10,7 @@ export interface CaptureOutcome {
   failed: string[]
 }
 
-const TARGETS = ['PNG 저장', '클립보드 복사', '서버 보관'] as const
-
-function stamp(date: Date): string {
-  const p = (n: number) => String(n).padStart(2, '0')
-  const day = `${date.getFullYear()}${p(date.getMonth() + 1)}${p(date.getDate())}`
-  return `${day}-${p(date.getHours())}${p(date.getMinutes())}${p(date.getSeconds())}`
-}
+const TARGETS = ['클립보드 복사', '서버 보관'] as const
 
 /**
  * 표시용 캔버스는 화면 밀도만큼 크다. 폰(dpr 3)에서는 3600x2025 이 되어 장당 몇 MB 씩
@@ -50,15 +44,6 @@ function writeToClipboard(blob: Promise<Blob>): Promise<void> {
     return Promise.reject(new Error('이 접속에서는 쓸 수 없다'))
   }
   return navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
-}
-
-function download(blob: Blob, name: string): void {
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = name
-  link.click()
-  URL.revokeObjectURL(url)
 }
 
 async function upload(blob: Blob): Promise<void> {
@@ -95,7 +80,6 @@ export async function captureFace(canvas: HTMLCanvasElement): Promise<CaptureOut
 
   const results = await Promise.all(
     [
-      Promise.resolve().then(() => download(blob, `studywatch-${stamp(new Date())}.png`)),
       clipboard.then((error) => {
         if (error) throw error
       }),
