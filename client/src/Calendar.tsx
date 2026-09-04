@@ -61,85 +61,95 @@ export function Calendar({ calendar, shotKey, onChanged }: Props) {
 
   return (
     <section className="month">
-      <header className="month__head">
-        <button type="button" className="month__nav" onClick={() => move(-1)} title="이전 달">
-          ‹
-        </button>
-        <div className="month__title">
-          <strong>{grid.label}</strong>
-          <span className="month__total">{formatDuration(monthTotal)}</span>
-        </div>
-        <button type="button" className="month__nav" onClick={() => move(1)} title="다음 달">
-          ›
-        </button>
-      </header>
-
-      <div className="month__weekdays">
-        {WEEKDAYS.map((label) => (
-          <span key={label} className="month__weekday">
-            {label}
-          </span>
-        ))}
-      </div>
-
-      <div className="month__grid">
-        {grid.weeks.flat().map((date, index) => {
-          if (!date) return <span key={`empty-${index}`} className="day day--void" />
-
-          const total = totals[date] ?? 0
-          const shotCount = byDate.get(date)?.length ?? 0
-          const classes = [
-            'day',
-            `day--${levelOf(total)}`,
-            date === calendar.today ? 'day--today' : '',
-            date === picked ? 'day--picked' : '',
-          ]
-            .filter(Boolean)
-            .join(' ')
-
-          return (
-            <button
-              key={date}
-              type="button"
-              className={classes}
-              onClick={() => setPicked(date === picked ? null : date)}
-              title={`${date} · ${total > 0 ? formatDuration(total) : '기록 없음'}`}
-            >
-              <span className="day__number">{Number(date.slice(8))}</span>
-              {/* 반올림해서 "0분" 이 되면 적지 않는다. 칸 색으로 이미 드러난다. */}
-              {total >= 30_000 && <span className="day__time">{formatDuration(total)}</span>}
-              {shotCount > 0 && <span className="day__dot" />}
+      <div className="month__body">
+        <div className="month__cal">
+          {/* 달 이동은 격자 폭에 맞춘다. 카드 전체 폭에 걸치면 격자와 중심이 어긋난다. */}
+          <header className="month__head">
+            <button type="button" className="month__nav" onClick={() => move(-1)} title="이전 달">
+              ‹
             </button>
-          )
-        })}
-      </div>
-
-      {picked && (
-        <div className="shots">
-          <span className="field__label">
-            {picked} · {formatDuration(totals[picked] ?? 0)}
-            {pickedShots.length > 0 ? ` · 스크린샷 ${pickedShots.length}장` : ' · 스크린샷 없음'}
-          </span>
-
-          <SessionList date={picked} onChanged={onChanged} />
-          {pickedShots.length > 0 && (
-            <div className="shots__list">
-              {pickedShots.map((shot) => (
-                <a
-                  key={shot.id}
-                  className="shots__item"
-                  href={`/api/screenshots/${shot.id}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  title="새 탭에서 크게 보기"
-                >
-                  <img src={`/api/screenshots/${shot.id}`} alt="" loading="lazy" />
-                </a>
-              ))}
+            <div className="month__title">
+              <strong>{grid.label}</strong>
+              <span className="month__total">{formatDuration(monthTotal)}</span>
             </div>
+            <button type="button" className="month__nav" onClick={() => move(1)} title="다음 달">
+              ›
+            </button>
+          </header>
+
+          <div className="month__weekdays">
+            {WEEKDAYS.map((label) => (
+              <span key={label} className="month__weekday">
+                {label}
+              </span>
+            ))}
+          </div>
+
+          <div className="month__grid">
+            {grid.weeks.flat().map((date, index) => {
+              if (!date) return <span key={`empty-${index}`} className="day day--void" />
+
+              const total = totals[date] ?? 0
+              const shotCount = byDate.get(date)?.length ?? 0
+              const classes = [
+                'day',
+                `day--${levelOf(total)}`,
+                date === calendar.today ? 'day--today' : '',
+                date === picked ? 'day--picked' : '',
+              ]
+                .filter(Boolean)
+                .join(' ')
+
+              return (
+                <button
+                  key={date}
+                  type="button"
+                  className={classes}
+                  onClick={() => setPicked(date === picked ? null : date)}
+                  title={`${date} · ${total > 0 ? formatDuration(total) : '기록 없음'}`}
+                >
+                  <span className="day__number">{Number(date.slice(8))}</span>
+                  {/* 반올림해서 "0분" 이 되면 적지 않는다. 칸 색으로 이미 드러난다. */}
+                  {total >= 30_000 && <span className="day__time">{formatDuration(total)}</span>}
+                  {shotCount > 0 && <span className="day__dot" />}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        <div className="month__detail">
+          {!picked && <p className="month__hint">날짜를 누르면 그날의 기록과 스크린샷을 본다.</p>}
+          {picked && (
+            <>
+              <span className="field__label">
+                {picked} · {formatDuration(totals[picked] ?? 0)}
+                {pickedShots.length > 0
+                  ? ` · 스크린샷 ${pickedShots.length}장`
+                  : ' · 스크린샷 없음'}
+              </span>
+
+              <SessionList date={picked} onChanged={onChanged} />
+              {pickedShots.length > 0 && (
+                <div className="shots__list">
+                  {pickedShots.map((shot) => (
+                    <a
+                      key={shot.id}
+                      className="shots__item"
+                      href={`/api/screenshots/${shot.id}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      title="새 탭에서 크게 보기"
+                    >
+                      <img src={`/api/screenshots/${shot.id}`} alt="" loading="lazy" />
+                    </a>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
-      )}
+      </div>
     </section>
   )
 }

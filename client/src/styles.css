@@ -82,8 +82,11 @@ body {
 }
 
 .btn {
-  flex: 1 1 140px;
-  padding: 16px 20px;
+  /* 버튼 하나만 남는 상태에서 1240px 짜리 슬래브가 되지 않게 내용만큼만 잡는다.
+     대신 바닥을 둬서 "PIP" 같은 짧은 라벨이 알약처럼 쪼그라들지 않게 한다. */
+  flex: 0 1 auto;
+  min-width: 132px;
+  padding: 16px 26px;
   font: inherit;
   font-weight: 600;
   font-size: 17px;
@@ -107,6 +110,8 @@ body {
 }
 
 .btn--primary {
+  /* 이 앱에서 제일 많이 누르는 버튼이다. 나머지보다 확실히 크게 둔다 */
+  min-width: 216px;
   background: var(--accent);
   border-color: var(--accent);
   color: var(--on-accent);
@@ -221,6 +226,7 @@ body {
 
 .btn--file {
   flex: 0 0 auto;
+  min-width: 0;
   padding: 10px 16px;
   font-size: 14px;
   text-align: center;
@@ -364,6 +370,21 @@ body {
   border-color: var(--accent);
 }
 
+.month__body {
+  display: grid;
+  gap: 20px;
+}
+
+.month__cal {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.month__cal .month__head {
+  margin-bottom: 4px;
+}
+
 .month__weekdays,
 .month__grid {
   display: grid;
@@ -447,18 +468,59 @@ body {
   background: currentColor;
 }
 
-.shots {
+.month__detail {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding-top: 4px;
+  padding-top: 16px;
   border-top: 1px solid var(--border);
+}
+
+.month__hint {
+  margin: 0;
+  font-size: 14px;
+  color: var(--dim);
 }
 
 .shots__list {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
+}
+
+/* 한 칸이 164px 까지 늘어나면 잔디가 잔디로 안 보인다. 격자를 절반으로 묶고
+   남는 쪽에 그날의 기록을 세운다. */
+@media (min-width: 900px) {
+  .month__body {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .month__detail {
+    padding: 2px 0 0 24px;
+    border-top: 0;
+    border-left: 1px solid var(--border);
+  }
+}
+
+/* 폰에서는 버튼을 다시 늘려 손가락으로 누를 수 있게 한다 */
+@media (max-width: 640px) {
+  .btn,
+  .btn--primary {
+    flex: 1 1 140px;
+    min-width: 0;
+  }
+
+  /* 폰에서는 칸 하나가 37px 이다. 66px 높이를 그대로 두면 세로로 길쭉해진다. */
+  .day {
+    min-height: 48px;
+    padding: 6px 2px 12px;
+  }
+
+  /* 그 폭에 "1시간 30분" 은 안 들어간다. 칸 색이 이미 같은 말을 한다. */
+  .day__time {
+    display: none;
+  }
 }
 
 .shots__item img {
@@ -488,7 +550,7 @@ body {
 }
 
 .tab {
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -539,6 +601,8 @@ body {
 
 .tab--icon {
   flex: 0 0 auto;
+  /* 탭은 왼쪽에 모으고 테마 버튼만 반대쪽 끝에 둔다 */
+  margin-left: auto;
   padding: 12px 14px;
   background: none;
   border: 0;
