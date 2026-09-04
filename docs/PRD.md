@@ -123,6 +123,8 @@
 | 저장소 | SQLite (better-sqlite3) | 단일 사용자, 동시 쓰기 없음. 파일 하나라 백업이 복사 한 번이다. |
 | 돌아가는 곳 | 집 PC의 docker-compose | 컨테이너 1개 + 볼륨 1개(SQLite 파일 + 업로드 이미지). 폰에서는 Tailscale로 접속한다. |
 | 렌더링 | `<canvas>` | FR-2 스크린샷과 FR-3 PIP가 같은 그리기 코드를 공유한다. 스크린샷에 별도 라이브러리가 필요 없다. |
+| 폰트 | Pretendard + JetBrains Mono, 직접 싣는다 | 이름만 부르면 안 깔린 기기에서 조용히 `system-ui` 로 떨어져 인증 스크린샷이 기기마다 다른 글자로 찍힌다. 빌드 타임에만 필요하므로 `devDependencies` 에 둔다 — 런타임 이미지가 커지지 않는다. |
+| CSS | 손으로 쓴 `styles.css` | Tailwind·Bootstrap 은 캔버스에 닿지 않는다. 표시면이 이 앱의 결과물이므로 프레임워크가 바꿀 수 있는 부분이 거의 없다. 토큰 몇 개로 충분하다. |
 
 ### 5.2 데이터
 

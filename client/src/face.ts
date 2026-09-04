@@ -14,8 +14,10 @@ import { paletteOf, type Palette } from './palette'
 export const FACE_WIDTH = 1600
 export const FACE_HEIGHT = 900
 
-const SANS = "'Pretendard', 'Noto Sans KR', system-ui, 'Segoe UI', sans-serif"
-const MONO = "'Cascadia Mono', Consolas, ui-monospace, monospace"
+// styles.css 와 같은 스택을 쓴다. main.tsx 가 두 폰트를 실제로 싣는다 —
+// 부르기만 하면 기기마다 다른 폰트로 그려지고, 그게 그대로 인증샷에 찍힌다.
+const SANS = "'Pretendard Variable', 'Pretendard', system-ui, 'Segoe UI', sans-serif"
+const MONO = "'JetBrains Mono Variable', ui-monospace, Consolas, monospace"
 
 const PADDING = 64
 const LEFT_END = 1030
