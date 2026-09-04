@@ -47,6 +47,7 @@ export function WatchCanvas({ state, serverNow, canvasRef, background, calendar 
         courseName: state.settings.courseName,
         instructorName: state.settings.instructorName,
         elapsedMs: session ? elapsedMs(session.startedAt, session.pauses, now) : 0,
+        goalMs: state.settings.goalMs,
         now,
         paused: session?.state === 'paused',
         background,
